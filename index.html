@@ -1077,40 +1077,106 @@ function checkout(){
   toast('✅ Transaksi berhasil!','success');
 }
 
-// ============ STRUK ============
+// ============ STRUK (GAYA MINIMARKET) ============
 function showStruk(tx){
-  const items=tx.items.map(i=>{
-    const price=(i.harga+i.toppingPrice)*i.qty;
-    const tLine=i.toppings.length?`\n  +${i.toppings.map(t=>t.nama).join(',')}`:''
-    const nLine=i.note?`\n  Catatan:${i.note}`:''
-    return `${i.emoji}${i.nama} x${i.qty}${tLine}${nLine}\n  ${fmtRp(i.harga+i.toppingPrice)} x${i.qty} = ${fmtRp(price)}`;
-  }).join('\n\n');
-  const now=new Date(tx.waktu);
-  document.getElementById('struk-content').innerHTML=`
-    <div class="struk-header">
-      <strong style="font-size:1rem">${db.settings.nama}</strong><br>
-      ${db.settings.alamat}<br>
-      Telp: ${db.settings.telp}
+  // Helper untuk menghilangkan tulisan 'Rp' dan spasi agar angka lebih rapi (seperti di struk minimarket)
+  const fmtAngka = (n) => fmtRp(n).replace(/Rp|\u00A0|\s/g, '').trim();
+
+  // Susunan daftar barang ala minimarket
+  const items = tx.items.map(i => {
+    const price = (i.harga + i.toppingPrice) * i.qty;
+    const tLine = i.toppings.length ? `<div style="font-size:0.75rem; color:var(--text2); margin-left:8px;">+ ${i.toppings.map(t=>t.nama).join(', ')}</div>` : '';
+    const nLine = i.note ? `<div style="font-size:0.75rem; color:var(--text2); margin-left:8px;">Ket: ${i.note}</div>` : '';
+    
+    return `
+      <div style="text-transform:uppercase; font-weight:bold;">${i.nama}</div>
+      ${tLine}
+      ${nLine}
+      <div class="struk-row" style="margin-bottom:6px;">
+        <span> &nbsp;&nbsp;${i.qty} x ${fmtAngka(i.harga + i.toppingPrice)}</span>
+        <span>${fmtAngka(price)}</span>
+      </div>`;
+  }).join('');
+
+  const now = new Date(tx.waktu);
+  const tglStr = now.toLocaleDateString('id-ID');
+  const wktStr = now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+
+  document.getElementById('struk-content').innerHTML = `
+    <!-- Header Toko -->
+    <div class="struk-header" style="font-family:'Courier New', monospace; text-align:center; text-transform:uppercase;">
+      <strong style="font-size:1.15rem;">${db.settings.nama}</strong><br>
+      <span style="font-size:0.85rem">${db.settings.alamat}</span><br>
+      <span style="font-size:0.85rem">TELP: ${db.settings.telp}</span><br>
+      <span style="font-size:0.85rem">NPWP: 01.234.567.8-901.000</span>
     </div>
-    <hr class="struk-divider">
-    <div class="struk-row"><span>No. Transaksi</span><span>${tx.no}</span></div>
-    <div class="struk-row"><span>Tanggal</span><span>${now.toLocaleDateString('id-ID')}</span></div>
-    <div class="struk-row"><span>Waktu</span><span>${now.toLocaleTimeString('id-ID')}</span></div>
-    <div class="struk-row"><span>Pelanggan</span><span>${tx.customer}</span></div>
-    <div class="struk-row"><span>Kasir</span><span>${tx.kasir}</span></div>
-    <hr class="struk-divider">
-    <pre style="font-size:.78rem;white-space:pre-wrap">${items}</pre>
-    <hr class="struk-divider">
-    <div class="struk-row"><span>Subtotal</span><span>${fmtRp(tx.subtotal)}</span></div>
-    ${tx.discAmt>0?`<div class="struk-row"><span>Diskon${tx.discType==='persen'?' ('+tx.discVal+'%)':''}</span><span>-${fmtRp(tx.discAmt)}</span></div>`:''}
-    <div class="struk-row struk-total"><span>TOTAL</span><span>${fmtRp(tx.total)}</span></div>
-    ${tx.metode==='tunai'?`<div class="struk-row"><span>Tunai</span><span>${fmtRp(tx.cash)}</span></div><div class="struk-row"><span>Kembalian</span><span>${fmtRp(tx.kembalian)}</span></div>`:''}
-    <div class="struk-row"><span>Metode</span><span style="text-transform:capitalize">${tx.metode}</span></div>
-    <hr class="struk-divider">
-    <div class="struk-footer">${db.settings.footer}</div>
+    
+    <hr class="struk-divider" style="border-top: 1px dashed var(--border2); margin: 8px 0;">
+    
+    <!-- Info Waktu & Kasir -->
+    <div class="struk-row" style="font-size:0.8rem; font-family:'Courier New', monospace;">
+      <span>${tx.no}</span>
+      <span>KSR: ${tx.kasir.toUpperCase()}</span>
+    </div>
+    <div class="struk-row" style="font-size:0.8rem; font-family:'Courier New', monospace;">
+      <span>${tglStr} ${wktStr}</span>
+      <span>${tx.customer !== 'Umum' ? tx.customer.toUpperCase() : ''}</span>
+    </div>
+    
+    <hr class="struk-divider" style="border-top: 1px dashed var(--border2); margin: 8px 0;">
+    
+    <!-- List Belanjaan -->
+    <div style="font-size:0.85rem; font-family:'Courier New', monospace; line-height:1.4;">
+      ${items}
+    </div>
+    
+    <hr class="struk-divider" style="border-top: 1px dashed var(--border2); margin: 8px 0;">
+    
+    <!-- Kalkulasi Pembayaran -->
+    <div class="struk-row" style="font-size:0.85rem; font-family:'Courier New', monospace;">
+      <span>Subtotal</span>
+      <span>${fmtAngka(tx.subtotal)}</span>
+    </div>
+    ${tx.discAmt > 0 ? `
+    <div class="struk-row" style="font-size:0.85rem; font-family:'Courier New', monospace;">
+      <span>Diskon ${tx.discType === 'persen' ? '(' + tx.discVal + '%)' : ''}</span>
+      <span>-${fmtAngka(tx.discAmt)}</span>
+    </div>` : ''}
+    
+    <hr class="struk-divider" style="border-top: 1px dashed var(--border2); margin: 8px 0;">
+    
+    <div class="struk-row" style="font-size:1rem; font-weight:bold; font-family:'Courier New', monospace;">
+      <span>TOTAL BELANJA</span>
+      <span>${fmtAngka(tx.total)}</span>
+    </div>
+    
+    ${tx.metode === 'tunai' ? `
+    <div class="struk-row" style="font-size:0.85rem; font-family:'Courier New', monospace; margin-top:4px;">
+      <span>TUNAI</span>
+      <span>${fmtAngka(tx.cash)}</span>
+    </div>
+    <div class="struk-row" style="font-size:0.85rem; font-family:'Courier New', monospace;">
+      <span>KEMBALIAN</span>
+      <span>${fmtAngka(tx.kembalian)}</span>
+    </div>` : `
+    <div class="struk-row" style="font-size:0.85rem; font-family:'Courier New', monospace; margin-top:4px;">
+      <span style="text-transform:uppercase">${tx.metode}</span>
+      <span>${fmtAngka(tx.total)}</span>
+    </div>`}
+    
+    <hr class="struk-divider" style="border-top: 1px dashed var(--border2); margin: 8px 0;">
+    
+    <!-- Footer -->
+    <div style="text-align: center; font-size: 0.75rem; font-family:'Courier New', monospace; margin: 6px 0;">
+      Harga sudah termasuk PPN
+    </div>
+    <div class="struk-footer" style="text-align:center; font-size:0.85rem; font-family:'Courier New', monospace; font-weight:bold; margin-top:8px; text-transform:uppercase;">
+      ${db.settings.footer ? db.settings.footer : 'TERIMA KASIH<br>SELAMAT BELANJA KEMBALI'}
+    </div>
   `;
   document.getElementById('struk-modal').style.display='flex';
 }
+
 
 function closeStruk(){document.getElementById('struk-modal').style.display='none'}
 
