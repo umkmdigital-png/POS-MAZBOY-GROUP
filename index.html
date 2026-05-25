@@ -1252,11 +1252,68 @@ function filterLaporan(){renderLaporan()}
 function sendWA(){
   const num=document.getElementById('wa-number').value;
   if(!num){toast('Masukkan nomor WhatsApp','error');return}
-  const today=new Date().toLocaleDateString('id-ID');
-  const todayTxs=db.transactions.filter(t=>{const d=new Date(t.waktu);return d.toLocaleDateString('id-ID')===today});
-  const total=todayTxs.reduce((s,t)=>s+t.total,0);
-  const msg=encodeURIComponent(`*Laporan Penjualan ${db.settings.nama}*\n📅 ${today}\n\n💰 Total: ${fmtRp(total)}\n🧾 Transaksi: ${todayTxs.length}\n\n${todayTxs.map(t=>`• ${t.no} - ${t.customer} - ${fmtRp(t.total)}`).join('\n')}\n\nDikirim otomatis dari Kasir Pro 🧾`);
-  window.open(`https://wa.me/${num}?text=${msg}`,'_blank');
+  
+  const targetDate = new Date();
+  const targetDateStr = targetDate.toLocaleDateString('id-ID');
+  const displayDate = targetDate.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  
+  const todayTxs = db.transactions.filter(t => {
+    const d = new Date(t.waktu);
+    return d.toLocaleDateString('id-ID') === targetDateStr;
+  });
+
+  if(todayTxs.length === 0){
+    toast('Belum ada transaksi hari ini untuk dilaporkan', 'info');
+    return;
+  }
+
+  // Kalkulasi Ringkasan
+  const totalKotor = todayTxs.reduce((s,t) => s + t.subtotal, 0);
+  const totalDiskon = todayTxs.reduce((s,t) => s + t.discAmt, 0);
+  const totalBersih = todayTxs.reduce((s,t) => s + t.total, 0);
+  
+  // Kalkulasi Metode Pembayaran
+  const totalTunai = todayTxs.filter(t => t.metode === 'tunai').reduce((s,t) => s + t.total, 0);
+  const totalQris = todayTxs.filter(t => t.metode === 'qris').reduce((s,t) => s + t.total, 0);
+  const totalTransfer = todayTxs.filter(t => t.metode === 'transfer').reduce((s,t) => s + t.total, 0);
+
+  // Menyusun Pesan WhatsApp
+  let msgText = `*📊 LAPORAN PENJUALAN KASIR*\n`;
+  msgText += `🏢 *${db.settings.nama}*\n`;
+  msgText += `📅 ${displayDate}\n`;
+  msgText += `-----------------------------------\n\n`;
+
+  msgText += `*📈 RINGKASAN PENDAPATAN*\n`;
+  msgText += `💵 Omset Kotor: ${fmtRp(totalKotor)}\n`;
+  if(totalDiskon > 0) {
+    msgText += `🎫 Total Diskon: -${fmtRp(totalDiskon)}\n`;
+  }
+  msgText += `💰 *Omset Bersih: ${fmtRp(totalBersih)}*\n`;
+  msgText += `🧾 Jml Transaksi: ${todayTxs.length} Nota\n\n`;
+
+  msgText += `*💳 METODE PEMBAYARAN*\n`;
+  msgText += `💵 Tunai: ${fmtRp(totalTunai)}\n`;
+  msgText += `📱 QRIS: ${fmtRp(totalQris)}\n`;
+  msgText += `🏦 Transfer: ${fmtRp(totalTransfer)}\n\n`;
+
+  msgText += `*📝 DETAIL TRANSAKSI*\n`;
+  todayTxs.forEach((t, i) => {
+    const jam = new Date(t.waktu).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+    // Menggabungkan nama item dan qty, misal: "Mie Ayam(2), Es Teh(1)"
+    const detailItems = t.items.map(item => `${item.nama}(${item.qty})`).join(', ');
+    
+    msgText += `${i+1}. *${t.no}* (${jam})\n`;
+    msgText += `   👤 Pelanggan: ${t.customer}\n`;
+    msgText += `   🛒 Item: ${detailItems}\n`;
+    msgText += `   💳 Bayar: ${t.metode.toUpperCase()}\n`;
+    msgText += `   💵 Total: *${fmtRp(t.total)}*\n\n`;
+  });
+
+  msgText += `-----------------------------------\n`;
+  msgText += `_Dikirim otomatis dari Kasir Pro 🧾_`;
+
+  const msg = encodeURIComponent(msgText);
+  window.open(`https://wa.me/${num}?text=${msg}`, '_blank');
 }
 
 async function sendSheet(){
