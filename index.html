@@ -293,6 +293,8 @@ select option{background:var(--bg3)}
 }
 .color-dot{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:.3rem}
 </style>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -772,10 +774,44 @@ let db = {
 };
 
 // Load from localStorage
-try{const s=localStorage.getItem('kasirpro_db');if(s){const p=JSON.parse(s);Object.assign(db,p)}}catch(e){}
+// 1. Konfigurasi Firebase (Salin dari Firebase Console Anda di Langkah 1)
+const firebaseConfig = {
+  apiKey: "API_KEY_ANDA",
+  authDomain: "PROYEK_ANDA.firebaseapp.com",
+  databaseURL: "https://PROYEK_ANDA-default-rtdb.firebaseio.com",
+  projectId: "PROYEK_ANDA",
+  storageBucket: "PROYEK_ANDA.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
+};
 
-function saveDB(){try{localStorage.setItem('kasirpro_db',JSON.stringify(db))}catch(e){}}
+// 2. Inisialisasi Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
 
+// 3. Fungsi untuk menarik (mendengarkan) data secara live dari internet
+function loadFromFirebase() {
+  database.ref('kasirpro_db').on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      Object.assign(db, data); // Perbarui memori aplikasi dengan data internet
+      
+      // Jika aplikasi sedang terbuka, segarkan tampilan kasir
+      if(document.getElementById('app').style.display === 'block') {
+        renderMenuGrid();
+        renderCategoryTabs();
+      }
+    }
+  });
+}
+loadFromFirebase();
+
+// 4. Fungsi menembak data ke internet setiap ada perubahan (menggantikan localStorage)
+function saveDB() {
+  database.ref('kasirpro_db').set(db)
+    .then(() => console.log('Data tersinkronisasi ke Cloud!'))
+    .catch((error) => console.error('Gagal sinkron:', error));
+}
 // ============ AUTH ============
 let currentUser=null;
 let selectedUserId=null;
