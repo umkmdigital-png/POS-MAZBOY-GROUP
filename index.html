@@ -747,26 +747,31 @@ let db = {
     {id:3,nama:'Tegar',role:'staff',pin:'9012',color:'blue',initials:'AP'},
   ],
   menus:[
-    {id:1,emoji:'🍜',nama:'Mie Ayam',kategori:'Makanan',harga:15000,stok:50,avail:true},
-    {id:2,emoji:'🍚',nama:'Nasi Goreng',kategori:'Makanan',harga:18000,stok:45,avail:true},
-    {id:3,emoji:'🍗',nama:'Ayam Goreng',kategori:'Makanan',harga:20000,stok:30,avail:true},
-    {id:4,emoji:'🥗',nama:'Gado-gado',kategori:'Makanan',harga:16000,stok:25,avail:true},
-    {id:5,emoji:'🍱',nama:'Paket Hemat',kategori:'Paket',harga:25000,stok:20,avail:true},
-    {id:6,emoji:'☕',nama:'Es Teh Manis',kategori:'Minuman',harga:5000,stok:100,avail:true},
-    {id:7,emoji:'🥤',nama:'Es Jeruk',kategori:'Minuman',harga:8000,stok:80,avail:true},
-    {id:8,emoji:'🧋',nama:'Es Kopi Susu',kategori:'Minuman',harga:15000,stok:60,avail:true},
-    {id:9,emoji:'🥛',nama:'Susu Segar',kategori:'Minuman',harga:10000,stok:40,avail:true},
-    {id:10,emoji:'🍟',nama:'Kentang Goreng',kategori:'Camilan',harga:12000,stok:35,avail:true},
-    {id:11,emoji:'🌮',nama:'Risoles',kategori:'Camilan',harga:8000,stok:28,avail:true},
-    {id:12,emoji:'🧇',nama:'Pisang Goreng',kategori:'Camilan',harga:6000,stok:40,avail:true},
+    {id:1,emoji:'🐙',nama:'Takoyaki Small',kategori:'Makanan',harga:10000,stok:50,avail:true},
+    {id:2,emoji:'🐙',nama:'Takoyaki Medium',kategori:'Makanan',harga:18000,stok:45,avail:true},
+    {id:3,emoji:'🐙',nama:'Takoyaki Large',kategori:'Makanan',harga:25000,stok:30,avail:true},
+    {id:4,emoji:'🐙',nama:'Takoyaki Polos Small',kategori:'Makanan',harga:5000,stok:25,avail:true},
+    {id:5,emoji:'🐙',nama:'Takoyaki Polos Medium',kategori:'Makanan',harga:10000,stok:20,avail:true},
+    {id:6,emoji:'🥞',nama:'Pancong Original',kategori:'Camilan',harga:7000,stok:100,avail:true},
+    {id:7,emoji:'🥞',nama:'Pancong Susu',kategori:'Camilan',harga:9000,stok:80,avail:true},
+    {id:8,emoji:'🥞',nama:'Pancong Coklat',kategori:'Camilan',harga:10000,stok:60,avail:true},
+    {id:9,emoji:'🥞',nama:'Pancong Choco Chruncy',kategori:'Camilan',harga:12000,stok:40,avail:true},
+    {id:10,emoji:'🥞',nama:'Pancong Chesee Chruncy',kategori:'Camilan',harga:13000,stok:35,avail:true},
+    {id:11,emoji:'🥞',nama:'Pancong Matcha',kategori:'Camilan',harga:11000,stok:28,avail:true},
+    {id:12,emoji:'🥞',nama:'Pancong Tiramisu',kategori:'Camilan',harga:10000,stok:40,avail:true},
+    {id:13,emoji:'🥞',nama:'Pancong Taro',kategori:'Camilan',harga:10000,stok:40,avail:true},
+    {id:14,emoji:'🥞',nama:'Pancong Durian',kategori:'Camilan',harga:10000,stok:40,avail:true},
+    {id:15,emoji:'🥞',nama:'Pancong Strawberry',kategori:'Camilan',harga:10000,stok:40,avail:true},
   ],
   toppings:[
-    {id:1,nama:'Extra Bakso',harga:5000,avail:true},
-    {id:2,nama:'Extra Cabe',harga:0,avail:true},
-    {id:3,nama:'Extra Saos',harga:0,avail:true},
-    {id:4,nama:'Keju',harga:5000,avail:true},
-    {id:5,nama:'Extra Nasi',harga:3000,avail:true},
-    {id:6,nama:'Telur Ceplok',harga:4000,avail:true},
+    {id:1,nama:'Almond',harga:4000,avail:true},
+    {id:2,nama:'Meses',harga:2000,avail:true},
+    {id:3,nama:'Kacang',harga:2000,avail:true},
+    {id:4,nama:'Keju',harga:3000,avail:true},
+    {id:5,nama:'Red Velvet',harga:3000,avail:true},
+    {id:6,nama:'Oreo',harga:3000,avail:true},
+    {id:7,nama:'Milo',harga:4000,avail:true},
+    {id:8,nama:'Susu',harga:2000,avail:true},
   ],
   transactions:[],
   absensi:[],
@@ -791,20 +796,32 @@ const database = firebase.database();
 
 // 3. Fungsi untuk menarik (mendengarkan) data secara live dari internet
 function loadFromFirebase() {
+  // .on('value') artinya aplikasi selalu "mendengarkan" perubahan secara live
   database.ref('kasirpro_db').on('value', (snapshot) => {
     const data = snapshot.val();
     if (data) {
-      Object.assign(db, data); // Perbarui memori aplikasi dengan data internet
+      // 1. Perbarui data menu dan akun dari internet
+      db.menu = data.menu || [];
+      db.kategori = data.kategori || [];
+      db.akun = data.akun || [];
+      // Catatan: db.transaksi dan keranjang tidak ditimpa agar transaksi staf saat ini aman
       
-      // Jika aplikasi sedang terbuka, segarkan tampilan kasir
-      if(document.getElementById('app').style.display === 'block') {
+      // 2. Segarkan tampilan layar (UI) secara otomatis
+      const currentPage = document.getElementById('app').style.display;
+      const adminPage = document.getElementById('admin').style.display;
+      
+      if(currentPage === 'block') {
+        // Jika staf sedang di halaman kasir, perbarui daftar kotak menu
         renderMenuGrid();
         renderCategoryTabs();
+      } else if (adminPage === 'block') {
+        // Jika owner sedang di halaman admin, perbarui tabel admin
+        renderAdminMenu();
       }
     }
   });
 }
-loadFromFirebase();
+  loadFromFirebase();
 
 // 4. Fungsi menembak data ke internet setiap ada perubahan (menggantikan localStorage)
 function saveDB() {
