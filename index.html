@@ -837,22 +837,21 @@ select option{background:var(--bg3)}
 let db = {
   settings:{nama:'Mazboy Group',alamat:'Jl. Kalibaru Timur III',telp:'085117010280',footer:'Terima kasih telah berkunjung! 🙏'},
   stores:[
-    {id:1,nama:'Cabang Kalibaru',alamat:'Jl. Kalibaru Timur III'},
-    {id:2,nama:'Cabang Cempaka',alamat:'Jl. Cempaka Putih'},
-    {id:3,nama:'Cabang Sudirman',alamat:'Jl. Jend. Sudirman'},
-    {id:4,nama:'Cabang Kelapa Gading',alamat:'Jl. Kelapa Gading'},
-    {id:5,nama:'Cabang Bekasi',alamat:'Jl. Ahmad Yani, Bekasi'},
+    {id:1,nama:'Cabang Takoyaki',alamat:'Jl. Kalibaru Timur III'},
+    {id:2,nama:'Cabang Pancong',alamat:'Jl. Kalibaru Timur III'},
+    {id:3,nama:'Cabang Kopi Rimba',alamat:'Jl. Kalibaru Timur III'},
+    {id:4,nama:'Cabang Es Blong',alamat:'Jl. Kalibaru Timur III'},
+    {id:5,nama:'Cabang Cilor',alamat:'Jl. Kalibaru Timur III'},
   ],
   // storeId null = akses semua toko (owner/admin). Staff/kasir wajib punya storeId toko tempat bertugas.
   users:[
-    {id:1,nama:'Walanduta',role:'owner',pin:'1234',color:'accent',initials:'BS',storeId:null},
+    {id:1,nama:'Walanduta',role:'owner',pin:'1234',color:'accent',initials:'OG',storeId:null},
     {id:9,nama:'Admin Pusat',role:'admin',pin:'0000',color:'pink',initials:'AD',storeId:null},
-    {id:2,nama:'Iqbal',role:'staff',pin:'5678',color:'green',initials:'IQ',storeId:1},
-    {id:3,nama:'Tegar',role:'staff',pin:'9012',color:'blue',initials:'TG',storeId:1},
-    {id:4,nama:'Dewi',role:'staff',pin:'1111',color:'amber',initials:'DW',storeId:2},
-    {id:5,nama:'Rian',role:'staff',pin:'2222',color:'amber',initials:'RN',storeId:3},
-    {id:6,nama:'Sari',role:'staff',pin:'3333',color:'amber',initials:'SR',storeId:4},
-    {id:7,nama:'Budi',role:'staff',pin:'4444',color:'amber',initials:'BD',storeId:5},
+    {id:2,nama:'Iqbal',role:'staff',pin:'1111',color:'green',initials:'PC',storeId:1},
+    {id:3,nama:'Tegar',role:'staff',pin:'2222',color:'blue',initials:'TK',storeId:2},
+    {id:4,nama:'Misbah',role:'staff',pin:'3333',color:'amber',initials:'KR',storeId:3},
+    {id:5,nama:'Cilor',role:'staff',pin:'4444',color:'amber',initials:'CR',storeId:4},
+    {id:6,nama:'ES',role:'staff',pin:'5555',color:'amber',initials:'ES',storeId:5},
   ],
   menus:[
     {id:1,emoji:'🐙',nama:'Takoyaki Small',kategori:'Makanan',harga:10000,stok:50,avail:true},
