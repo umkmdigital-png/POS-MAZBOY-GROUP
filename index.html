@@ -11,7 +11,7 @@
 :root{
   --bg:#0f0f13;--bg2:#17171e;--bg3:#1e1e28;--bg4:#252532;
   --border:#2e2e3e;--border2:#3a3a4e;
-  --text:#f0f0fa;--text2:#9898b8;--text3:#6060808;
+  --text:#f0f0fa;--text2:#9898b8;--text3:#606080;
   --accent:#7c6af7;--accent2:#9b8ef9;--accent-bg:#1a1730;
   --green:#22c55e;--green-bg:#0a1f0f;
   --red:#ef4444;--red-bg:#1f0a0a;
@@ -50,6 +50,7 @@ h1,h2,h3{font-family:'Space Grotesk',sans-serif}
 .role-badge{font-size:.7rem;padding:.2rem .5rem;border-radius:20px;font-weight:600;margin-left:auto}
 .badge-owner{background:var(--amber-bg);color:var(--amber)}
 .badge-staff{background:var(--blue-bg);color:var(--blue)}
+.badge-admin{background:var(--pink-bg);color:var(--pink)}
 
 /* LAYOUT */
 #app{display:none;height:100vh;overflow:hidden}
@@ -292,6 +293,48 @@ select option{background:var(--bg3)}
   .kasir-layout{grid-template-columns:1fr}
 }
 .color-dot{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:.3rem}
+
+/* SIDEBAR COLLAPSE */
+.sidebar.collapsed{width:72px}
+.sidebar.collapsed .sidebar-logo h2,
+.sidebar.collapsed .nav-item span:not(.nav-icon),
+.sidebar.collapsed .nav-label,
+.sidebar.collapsed .current-user .name,
+.sidebar.collapsed .current-user .role{display:none}
+.sidebar.collapsed .nav-item{justify-content:center;padding:.65rem}
+.sidebar.collapsed .current-user{justify-content:center}
+.sidebar.collapsed .sidebar-logo{justify-content:center;padding:1.2rem .5rem}
+.collapse-toggle{background:none;border:1px solid var(--border2);color:var(--text2);cursor:pointer;border-radius:8px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;margin-left:auto;transition:all .2s}
+.collapse-toggle:hover{color:var(--text);border-color:var(--accent)}
+.sidebar.collapsed .collapse-toggle{margin-left:0;transform:rotate(180deg)}
+.sidebar.collapsed .sidebar-bottom .btn-ghost{display:none}
+.nav-item{position:relative}
+.sidebar.collapsed .nav-item:hover::after{content:attr(data-label);position:fixed;left:78px;background:var(--bg4);color:var(--text);padding:.4rem .7rem;border-radius:8px;font-size:.78rem;white-space:nowrap;z-index:2000;box-shadow:var(--shadow);pointer-events:none}
+
+/* TAP CASH */
+.tapcash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;margin-bottom:.6rem}
+.tapcash-btn{padding:.55rem .3rem;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg3);color:var(--text);cursor:pointer;font-size:.78rem;font-weight:700;font-family:inherit;transition:all .2s;text-align:center}
+.tapcash-btn:hover{border-color:var(--accent);background:var(--accent-bg);color:var(--accent2)}
+.tapcash-btn.exact{background:var(--green-bg);color:var(--green);border-color:var(--green);grid-column:span 3}
+
+/* MULTI-STORE DASHBOARD */
+.store-select-row{display:flex;align-items:center;gap:.6rem;margin-bottom:1rem;flex-wrap:wrap}
+.store-select-row select{background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:.55rem .85rem;border-radius:var(--r);font-size:.85rem;font-family:inherit}
+.store-select-row select:focus{outline:none;border-color:var(--accent)}
+.live-dot{display:inline-flex;align-items:center;gap:.35rem;font-size:.75rem;color:var(--green);font-weight:700}
+.live-dot::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;animation:pulseDot 1.4s infinite}
+@keyframes pulseDot{0%{box-shadow:0 0 0 0 rgba(34,197,94,.5)}70%{box-shadow:0 0 0 7px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+.store-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:.85rem;margin-bottom:1.5rem}
+.store-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:1.1rem;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.store-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow)}
+.store-card.top::before{content:'👑 TERLARIS';position:absolute;top:.6rem;right:.6rem;font-size:.62rem;font-weight:700;color:var(--amber);background:var(--amber-bg);padding:.15rem .5rem;border-radius:20px}
+.store-card h4{font-size:1rem;font-weight:700;margin-bottom:.15rem}
+.store-card .staff-count{font-size:.75rem;color:var(--text2);margin-bottom:.7rem}
+.store-card .omset{font-size:1.4rem;font-weight:700;font-family:'Space Grotesk',sans-serif;color:var(--green);margin-bottom:.15rem}
+.store-card .sub{font-size:.75rem;color:var(--text2);display:flex;justify-content:space-between;margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)}
+.store-total-banner{background:linear-gradient(135deg,var(--accent-bg),var(--pink-bg));border:1px solid var(--border2);border-radius:var(--r2);padding:1.25rem;margin-bottom:1.25rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.store-total-banner .label{font-size:.8rem;color:var(--text2)}
+.store-total-banner .value{font-size:2rem;font-weight:700;font-family:'Space Grotesk',sans-serif;background:linear-gradient(135deg,#7c6af7,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -323,35 +366,40 @@ select option{background:var(--bg3)}
       <div class="sidebar-logo">
         <span style="font-size:1.4rem">🧾</span>
         <h2>KASIR PRO</h2>
+        <button class="collapse-toggle" onclick="toggleSidebarCollapse()" title="Ciutkan sidebar">«</button>
       </div>
       <nav class="nav-section">
+        <div class="nav-label" id="nav-dashboard-section" style="display:none">Multi-Toko</div>
+        <div class="nav-item owner-admin-only" onclick="showPage('dashboard')" style="display:none" data-label="Dashboard">
+          <span class="nav-icon">🏬</span> Dashboard
+        </div>
         <div class="nav-label">Utama</div>
-        <div class="nav-item active" onclick="showPage('kasir')">
+        <div class="nav-item active" onclick="showPage('kasir')" data-label="Kasir">
           <span class="nav-icon">🛒</span> Kasir
         </div>
-        <div class="nav-item" onclick="showPage('laporan')">
+        <div class="nav-item" onclick="showPage('laporan')" data-label="Laporan">
           <span class="nav-icon">📊</span> Laporan
         </div>
-        <div class="nav-item" onclick="showPage('stok')">
+        <div class="nav-item" onclick="showPage('stok')" data-label="Stok Opname">
           <span class="nav-icon">📦</span> Stok Opname
         </div>
-        <div class="nav-item" onclick="showPage('absensi')">
+        <div class="nav-item" onclick="showPage('absensi')" data-label="Absensi">
           <span class="nav-icon">🕐</span> Absensi
         </div>
-        <div class="nav-item" onclick="showPage('kalkulator')">
+        <div class="nav-item" onclick="showPage('kalkulator')" data-label="Kalkulator">
           <span class="nav-icon">🧮</span> Kalkulator
         </div>
         <div class="nav-label" id="nav-owner-section" style="display:none">Owner</div>
-        <div class="nav-item owner-only" onclick="showPage('menu')" style="display:none">
+        <div class="nav-item owner-only" onclick="showPage('menu')" style="display:none" data-label="Kelola Menu">
           <span class="nav-icon">🍽️</span> Kelola Menu
         </div>
-        <div class="nav-item owner-only" onclick="showPage('topping')" style="display:none">
+        <div class="nav-item owner-only" onclick="showPage('topping')" style="display:none" data-label="Kelola Topping">
           <span class="nav-icon">🫙</span> Kelola Topping
         </div>
-        <div class="nav-item owner-only" onclick="showPage('akun')" style="display:none">
+        <div class="nav-item owner-only" onclick="showPage('akun')" style="display:none" data-label="Kelola Akun">
           <span class="nav-icon">👥</span> Kelola Akun
         </div>
-        <div class="nav-item owner-only" onclick="showPage('pengaturan')" style="display:none">
+        <div class="nav-item owner-only" onclick="showPage('pengaturan')" style="display:none" data-label="Pengaturan">
           <span class="nav-icon">⚙️</span> Pengaturan
         </div>
       </nav>
@@ -375,10 +423,37 @@ select option{background:var(--bg3)}
       </div>
       <div class="pages">
 
+        <!-- DASHBOARD MULTI-TOKO -->
+        <div class="page" id="page-dashboard">
+          <div class="section-header">
+            <h3>🏬 Dashboard Penjualan — 5 Toko</h3>
+            <span class="live-dot">LIVE</span>
+          </div>
+          <div class="store-total-banner">
+            <div>
+              <div class="label">Total Omset Semua Toko Hari Ini</div>
+              <div class="value" id="dash-total-omset">Rp 0</div>
+            </div>
+            <div style="display:flex;gap:1.5rem;flex-wrap:wrap">
+              <div><div class="label" style="font-size:.75rem;color:var(--text2)">Transaksi</div><div style="font-size:1.3rem;font-weight:700" id="dash-total-tx">0</div></div>
+              <div><div class="label" style="font-size:.75rem;color:var(--text2)">Staff Aktif</div><div style="font-size:1.3rem;font-weight:700" id="dash-total-staff">0</div></div>
+            </div>
+          </div>
+          <div class="store-grid" id="dashboard-store-grid"></div>
+          <h4 style="margin-bottom:.75rem;font-size:.95rem">📈 Perbandingan Omset per Toko (Hari Ini)</h4>
+          <div class="table-wrap" style="padding:1rem">
+            <div class="mini-chart" id="dashboard-mini-chart" style="height:160px"></div>
+          </div>
+        </div>
+
         <!-- KASIR -->
         <div class="page active" id="page-kasir">
           <div class="kasir-layout">
             <div class="menu-section">
+              <div class="store-select-row" id="kasir-store-select-row" style="display:none">
+                <span style="font-size:.85rem;color:var(--text2)">🏪 Toko:</span>
+                <select id="kasir-store-select" onchange="onKasirStoreChange()"></select>
+              </div>
               <div class="search-bar">
                 <span class="search-icon">🔍</span>
                 <input type="text" placeholder="Cari menu..." id="menu-search" oninput="filterMenu()">
@@ -419,6 +494,15 @@ select option{background:var(--bg3)}
                 </div>
                 <div class="cash-input show" id="cash-section">
                   <input type="number" id="cash-input" placeholder="Uang diterima..." oninput="calcKembalian()">
+                  <div class="tapcash-grid" style="margin-top:.5rem">
+                    <button type="button" class="tapcash-btn" onclick="tapCash(5000)">+5rb</button>
+                    <button type="button" class="tapcash-btn" onclick="tapCash(10000)">+10rb</button>
+                    <button type="button" class="tapcash-btn" onclick="tapCash(20000)">+20rb</button>
+                    <button type="button" class="tapcash-btn" onclick="tapCash(50000)">+50rb</button>
+                    <button type="button" class="tapcash-btn" onclick="tapCash(100000)">+100rb</button>
+                    <button type="button" class="tapcash-btn" onclick="tapCashClear()">↺ Reset</button>
+                    <button type="button" class="tapcash-btn exact" onclick="tapCashExact()">✅ Uang Pas</button>
+                  </div>
                 </div>
                 <div class="kembalian" id="kembalian-display"></div>
                 <button class="btn btn-success btn-full" onclick="checkout()" style="font-size:.95rem;padding:.8rem">✅ Proses Transaksi</button>
@@ -430,7 +514,7 @@ select option{background:var(--bg3)}
         <!-- LAPORAN -->
         <div class="page" id="page-laporan">
           <div class="section-header">
-            <h3>📊 Laporan Penjualan</h3>
+            <h3>📊 Laporan Penjualan <span id="laporan-store-badge"></span></h3>
             <div class="report-actions">
               <button class="wa-btn" onclick="sendWA()">📱 Kirim WhatsApp</button>
               <button class="sheet-btn" onclick="sendSheet()">📋 Google Sheet</button>
@@ -459,7 +543,7 @@ select option{background:var(--bg3)}
           <h4 style="margin-bottom:.75rem;font-size:.95rem">Riwayat Transaksi</h4>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Waktu</th><th>No</th><th>Pelanggan</th><th>Items</th><th>Bayar</th><th>Diskon</th><th>Total</th><th>Metode</th></tr></thead>
+              <thead><tr><th>Waktu</th><th>Toko</th><th>No</th><th>Pelanggan</th><th>Items</th><th>Bayar</th><th>Diskon</th><th>Total</th><th>Metode</th></tr></thead>
               <tbody id="laporan-tbody"></tbody>
             </table>
           </div>
@@ -721,7 +805,10 @@ select option{background:var(--bg3)}
     <div class="modal-body">
       <div class="form-group"><label>Nama</label><input type="text" id="user-nama-input" placeholder="Nama staff..."></div>
       <div class="form-group"><label>Role</label>
-        <select id="user-role-input"><option value="staff">Staff</option><option value="owner">Owner</option></select>
+        <select id="user-role-input" onchange="onUserRoleChange()"><option value="staff">Staff / Kasir</option><option value="admin">Admin (lihat semua toko)</option><option value="owner">Owner</option></select>
+      </div>
+      <div class="form-group" id="user-store-group"><label>Toko</label>
+        <select id="user-store-input"></select>
       </div>
       <div class="form-group"><label>PIN (4-6 digit)</label><input type="password" id="user-pin-input" placeholder="PIN..." maxlength="6"></div>
       <div class="form-group"><label>Warna Avatar</label>
@@ -741,10 +828,23 @@ select option{background:var(--bg3)}
 // ============ DATA STORE ============
 let db = {
   settings:{nama:'Mazboy Group',alamat:'Jl. Kalibaru Timur III',telp:'085117010280',footer:'Terima kasih telah berkunjung! 🙏'},
+  stores:[
+    {id:1,nama:'Cabang Kalibaru',alamat:'Jl. Kalibaru Timur III'},
+    {id:2,nama:'Cabang Cempaka',alamat:'Jl. Cempaka Putih'},
+    {id:3,nama:'Cabang Sudirman',alamat:'Jl. Jend. Sudirman'},
+    {id:4,nama:'Cabang Kelapa Gading',alamat:'Jl. Kelapa Gading'},
+    {id:5,nama:'Cabang Bekasi',alamat:'Jl. Ahmad Yani, Bekasi'},
+  ],
+  // storeId null = akses semua toko (owner/admin). Staff/kasir wajib punya storeId toko tempat bertugas.
   users:[
-    {id:1,nama:'Walanduta',role:'owner',pin:'1234',color:'accent',initials:'BS'},
-    {id:2,nama:'Iqbal',role:'staff',pin:'5678',color:'green',initials:'SD'},
-    {id:3,nama:'Tegar',role:'staff',pin:'9012',color:'blue',initials:'AP'},
+    {id:1,nama:'Walanduta',role:'owner',pin:'1234',color:'accent',initials:'BS',storeId:null},
+    {id:9,nama:'Admin Pusat',role:'admin',pin:'0000',color:'pink',initials:'AD',storeId:null},
+    {id:2,nama:'Iqbal',role:'staff',pin:'5678',color:'green',initials:'IQ',storeId:1},
+    {id:3,nama:'Tegar',role:'staff',pin:'9012',color:'blue',initials:'TG',storeId:1},
+    {id:4,nama:'Dewi',role:'staff',pin:'1111',color:'amber',initials:'DW',storeId:2},
+    {id:5,nama:'Rian',role:'staff',pin:'2222',color:'amber',initials:'RN',storeId:3},
+    {id:6,nama:'Sari',role:'staff',pin:'3333',color:'amber',initials:'SR',storeId:4},
+    {id:7,nama:'Budi',role:'staff',pin:'4444',color:'amber',initials:'BD',storeId:5},
   ],
   menus:[
     {id:1,emoji:'🐙',nama:'Takoyaki Small',kategori:'Makanan',harga:10000,stok:50,avail:true},
@@ -778,8 +878,7 @@ let db = {
   nextTxId:1
 };
 
-// Load from localStorage
-// 1. Konfigurasi Firebase (Salin dari Firebase Console Anda di Langkah 1)
+// ============ PERSISTENCE / FIREBASE ============
 const firebaseConfig = {
   apiKey: "API_KEY_ANDA",
   authDomain: "PROYEK_ANDA.firebaseapp.com",
@@ -790,48 +889,93 @@ const firebaseConfig = {
   appId: "APP_ID"
 };
 
-// 2. Inisialisasi Firebase
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
+let database = null;
+let firebaseReady = false;
 
-// 3. Fungsi untuk menarik (mendengarkan) data secara live dari internet
+function isFirebaseConfigured() {
+  return !!window.firebase &&
+    firebaseConfig.apiKey && !firebaseConfig.apiKey.includes('API_KEY_ANDA') &&
+    firebaseConfig.projectId && !firebaseConfig.projectId.includes('PROYEK_ANDA') &&
+    firebaseConfig.databaseURL && !firebaseConfig.databaseURL.includes('PROYEK_ANDA');
+}
+
+function initFirebase() {
+  if (!isFirebaseConfigured()) {
+    console.info('Firebase belum dikonfigurasi. Aplikasi berjalan menggunakan localStorage.');
+    return false;
+  }
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    database = firebase.database();
+    firebaseReady = true;
+    return true;
+  } catch (error) {
+    console.warn('Firebase tidak dapat diinisialisasi:', error);
+    database = null;
+    firebaseReady = false;
+    return false;
+  }
+}
+
+function loadLocalDB() {
+  try {
+    const raw = localStorage.getItem('KASIR_MAZBOY_DB');
+    if (!raw) return false;
+    const saved = JSON.parse(raw);
+    db = { ...db, ...saved,
+      settings: { ...db.settings, ...(saved.settings || {}) },
+      stores: Array.isArray(saved.stores) ? saved.stores : db.stores,
+      users: Array.isArray(saved.users) ? saved.users : db.users,
+      menus: Array.isArray(saved.menus) ? saved.menus : db.menus,
+      toppings: Array.isArray(saved.toppings) ? saved.toppings : db.toppings,
+      transactions: Array.isArray(saved.transactions) ? saved.transactions : db.transactions,
+      absensi: Array.isArray(saved.absensi) ? saved.absensi : db.absensi,
+      nextTxId: Number(saved.nextTxId) || db.nextTxId
+    };
+    return true;
+  } catch (error) {
+    console.warn('Gagal memuat data lokal:', error);
+    return false;
+  }
+}
+
+function saveDB() {
+  try {
+    localStorage.setItem('KASIR_MAZBOY_DB', JSON.stringify(db));
+  } catch (error) {
+    console.warn('Gagal menyimpan localStorage:', error);
+  }
+  if (firebaseReady && database) {
+    database.ref('kasirpro_db').set(db)
+      .catch(error => console.error('Gagal sinkron Firebase:', error));
+  }
+}
+
 function loadFromFirebase() {
-  // .on('value') artinya aplikasi selalu "mendengarkan" perubahan secara live
-  database.ref('kasirpro_db').on('value', (snapshot) => {
+  if (!firebaseReady || !database) return;
+  database.ref('kasirpro_db').on('value', snapshot => {
     const data = snapshot.val();
-    if (data) {
-      // 1. Perbarui data menu dan akun dari internet
-      db.menu = data.menu || [];
-      db.kategori = data.kategori || [];
-      db.akun = data.akun || [];
-      // Catatan: db.transaksi dan keranjang tidak ditimpa agar transaksi staf saat ini aman
-      
-      // 2. Segarkan tampilan layar (UI) secara otomatis
-      const currentPage = document.getElementById('app').style.display;
-      const adminPage = document.getElementById('admin').style.display;
-      
-      if(currentPage === 'block') {
-        // Jika staf sedang di halaman kasir, perbarui daftar kotak menu
-        renderMenuGrid();
-        renderCategoryTabs();
-      } else if (adminPage === 'block') {
-        // Jika owner sedang di halaman admin, perbarui tabel admin
-        renderAdminMenu();
-      }
-    }
+    if (!data) return;
+    if (Array.isArray(data.menus)) db.menus = data.menus;
+    if (Array.isArray(data.users)) db.users = data.users;
+    if (Array.isArray(data.toppings)) db.toppings = data.toppings;
+    if (Array.isArray(data.stores)) db.stores = data.stores;
+    if (data.settings && typeof data.settings === 'object') db.settings = { ...db.settings, ...data.settings };
+    if (Array.isArray(data.transactions)) db.transactions = data.transactions;
+    if (Array.isArray(data.absensi)) db.absensi = data.absensi;
+    if (Number.isInteger(data.nextTxId)) db.nextTxId = data.nextTxId;
+    localStorage.setItem('KASIR_MAZBOY_DB', JSON.stringify(db));
+    refreshAllUI();
+  }, error => {
+    console.warn('Firebase listener error:', error);
   });
 }
-  loadFromFirebase();
 
-// 4. Fungsi menembak data ke internet setiap ada perubahan (menggantikan localStorage)
-function saveDB() {
-  database.ref('kasirpro_db').set(db)
-    .then(() => console.log('Data tersinkronisasi ke Cloud!'))
-    .catch((error) => console.error('Gagal sinkron:', error));
-}
 // ============ AUTH ============
 let currentUser=null;
 let selectedUserId=null;
+
+function storeName(id){const s=db.stores.find(x=>x.id===id);return s?s.nama:'Semua Toko'}
 
 function renderUserList(){
   const ul=document.getElementById('user-list');
@@ -840,9 +984,9 @@ function renderUserList(){
       <div class="user-avatar" style="background:var(--${u.color}-bg||var(--accent-bg));color:var(--${u.color}||var(--accent))">${u.initials||u.nama.charAt(0)}</div>
       <div>
         <div style="font-weight:600;font-size:.9rem">${u.nama}</div>
-        <div style="font-size:.75rem;color:var(--text2)">${u.role}</div>
+        <div style="font-size:.75rem;color:var(--text2)">${u.storeId?storeName(u.storeId):'Akses Semua Toko'}</div>
       </div>
-      <span class="role-badge ${u.role==='owner'?'badge-owner':'badge-staff'}">${u.role}</span>
+      <span class="role-badge ${u.role==='owner'?'badge-owner':u.role==='admin'?'badge-admin':'badge-staff'}">${u.role}</span>
     </div>
   `).join('');
 }
@@ -873,9 +1017,22 @@ function logout(){
 }
 
 // ============ APP INIT ============
+function refreshAllUI() {
+  if (typeof renderCategoryTabs === 'function') renderCategoryTabs();
+  if (typeof renderMenuGrid === 'function') renderMenuGrid();
+  if (typeof renderMenuMgmt === 'function') renderMenuMgmt();
+  if (typeof renderToppingTable === 'function') renderToppingTable();
+  if (typeof renderAkunTable === 'function') renderAkunTable();
+  if (typeof renderStokTable === 'function') renderStokTable();
+  if (typeof renderAbsensi === 'function') renderAbsensi();
+  if (typeof renderLaporan === 'function') renderLaporan();
+  if (typeof updateFloatingChart === 'function' && document.getElementById('floating-chart')) updateFloatingChart();
+  if (typeof renderDashboard === 'function' && document.getElementById('page-dashboard')?.classList.contains('active')) renderDashboard();
+}
+
 function initApp(){
   document.getElementById('sidebar-name').textContent=currentUser.nama;
-  document.getElementById('sidebar-role').textContent=currentUser.role;
+  document.getElementById('sidebar-role').textContent=currentUser.role+(currentUser.storeId?' · '+storeName(currentUser.storeId):' · Semua Toko');
   const av=document.getElementById('sidebar-avatar');
   av.textContent=currentUser.initials||currentUser.nama.charAt(0);
   av.style.background=`var(--${currentUser.color}-bg,var(--accent-bg))`;
@@ -885,7 +1042,26 @@ function initApp(){
   const ownerItems=document.querySelectorAll('.owner-only');
   ownerItems.forEach(el=>{el.style.display=currentUser.role==='owner'?'flex':'none'});
   document.getElementById('nav-owner-section').style.display=currentUser.role==='owner'?'block':'none';
-  
+
+  // Show multi-store dashboard for owner & admin (roles with storeId===null / full access)
+  const isMultiStoreUser=currentUser.role==='owner'||currentUser.role==='admin';
+  document.querySelectorAll('.owner-admin-only').forEach(el=>{el.style.display=isMultiStoreUser?'flex':'none'});
+  document.getElementById('nav-dashboard-section').style.display=isMultiStoreUser?'block':'none';
+
+  // Setup active store context for Kasir. Staff selalu terkunci ke toko mereka;
+  // Owner/Admin bisa memilih toko mana yang mereka layani saat transaksi.
+  currentStoreId=currentUser.storeId;
+  const storeRow=document.getElementById('kasir-store-select-row');
+  if(currentUser.storeId===null){
+    storeRow.style.display='flex';
+    const sel=document.getElementById('kasir-store-select');
+    sel.innerHTML=db.stores.map(s=>`<option value="${s.id}">${s.nama}</option>`).join('');
+    currentStoreId=db.stores[0]?db.stores[0].id:null;
+    sel.value=currentStoreId;
+  }else{
+    storeRow.style.display='none';
+  }
+
   document.getElementById('floating-chart').style.display='block';
   
   renderCategoryTabs();
@@ -900,8 +1076,10 @@ function initApp(){
   initCalc();
   updateClock();
   updateFloatingChart();
+  if(isMultiStoreUser){renderDashboard();showPage('dashboard')}
   setInterval(updateClock,1000);
   setInterval(updateFloatingChart,30000);
+  setInterval(()=>{if(document.getElementById('page-dashboard').classList.contains('active'))renderDashboard()},15000);
 
   // Set today dates
   const today=new Date().toISOString().split('T')[0];
@@ -919,11 +1097,16 @@ function updateClock(){
 function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-  const titles={kasir:'🛒 Kasir',laporan:'📊 Laporan',stok:'📦 Stok Opname',absensi:'🕐 Absensi',kalkulator:'🧮 Kalkulator',menu:'🍽️ Kelola Menu',topping:'🫙 Kelola Topping',akun:'👥 Kelola Akun',pengaturan:'⚙️ Pengaturan'};
+  const targetPage=document.getElementById('page-'+name);
+  if(!targetPage)return;
+  targetPage.classList.add('active');
+  const clicked=[...document.querySelectorAll('.nav-item')].find(n=>n.getAttribute('onclick')===`showPage('${name}')`);
+  if(clicked)clicked.classList.add('active');
+  const titles={dashboard:'🏬 Dashboard Multi-Toko',kasir:'🛒 Kasir',laporan:'📊 Laporan',stok:'📦 Stok Opname',absensi:'🕐 Absensi',kalkulator:'🧮 Kalkulator',menu:'🍽️ Kelola Menu',topping:'🫙 Kelola Topping',akun:'👥 Kelola Akun',pengaturan:'⚙️ Pengaturan'};
   document.getElementById('page-title').textContent=titles[name]||name;
   if(name==='laporan')renderLaporan();
   if(name==='stok')renderStokTable();
+  if(name==='dashboard')renderDashboard();
   closeSidebar();
 }
 
@@ -935,6 +1118,9 @@ function closeSidebar(){
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sidebar-overlay').classList.remove('show');
 }
+function toggleSidebarCollapse(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
 
 // ============ KASIR - MENU ============
 let activeCategory='Semua';
@@ -942,6 +1128,13 @@ let cart=[];
 let selectedMenuForCart=null;
 let selectedToppings=[];
 let paymentMethod='tunai';
+let currentStoreId=null;
+let dashboardStoreFilter=null;
+
+function onKasirStoreChange(){
+  currentStoreId=parseInt(document.getElementById('kasir-store-select').value);
+  toast(`🏪 Kasir aktif untuk: ${storeName(currentStoreId)}`,'info');
+}
 
 function renderCategoryTabs(){
   const cats=['Semua',...new Set(db.menus.map(m=>m.kategori))];
@@ -1081,6 +1274,21 @@ function calcKembalian(){
   }else{el.style.display='none'}
 }
 
+function tapCash(amount){
+  const el=document.getElementById('cash-input');
+  const cur=parseFloat(el.value)||0;
+  el.value=cur+amount;
+  calcKembalian();
+}
+function tapCashClear(){
+  document.getElementById('cash-input').value='';
+  calcKembalian();
+}
+function tapCashExact(){
+  document.getElementById('cash-input').value=getTotal();
+  calcKembalian();
+}
+
 function getTotal(){
   const subtotal=cart.reduce((s,c)=>s+(c.harga+c.toppingPrice)*c.qty,0);
   const discVal=parseFloat(document.getElementById('discount-val').value)||0;
@@ -1114,7 +1322,8 @@ function checkout(){
     subtotal,discAmt,discType,discVal,total,
     metode:paymentMethod,
     cash,kembalian:cash-total,
-    kasir:currentUser.nama
+    kasir:currentUser.nama,
+    storeId:currentStoreId
   };
   // Update stok
   cart.forEach(item=>{
@@ -1158,8 +1367,8 @@ function showStruk(tx){
   document.getElementById('struk-content').innerHTML = `
     <!-- Header Toko -->
     <div class="struk-header" style="font-family:'Courier New', monospace; text-align:center; text-transform:uppercase;">
-      <strong style="font-size:1.15rem;">${db.settings.nama}</strong><br>
-      <span style="font-size:0.85rem">${db.settings.alamat}</span><br>
+      <strong style="font-size:1.15rem;">${db.settings.nama}${tx.storeId?' - '+storeName(tx.storeId):''}</strong><br>
+      <span style="font-size:0.85rem">${(db.stores.find(s=>s.id===tx.storeId)||{}).alamat||db.settings.alamat}</span><br>
       <span style="font-size:0.85rem">TELP: ${db.settings.telp}</span><br>
       <span style="font-size:0.85rem">NPWP: 01.234.567.8-901.000</span>
     </div>
@@ -1272,8 +1481,18 @@ function renderLaporan(){
   const from=document.getElementById('from-date')?.value;
   const to=document.getElementById('to-date')?.value;
   let txs=db.transactions;
+  // Staff/kasir hanya melihat laporan tokonya sendiri. Owner & admin melihat semua toko
+  // kecuali sedang drill-down dari Dashboard ke toko tertentu.
+  if(currentUser&&currentUser.storeId!==null){txs=txs.filter(t=>t.storeId===currentUser.storeId)}
+  else if(dashboardStoreFilter){txs=txs.filter(t=>t.storeId===dashboardStoreFilter)}
   if(from){const fd=new Date(from);txs=txs.filter(t=>new Date(t.waktu)>=fd)}
   if(to){const td=new Date(to);td.setHours(23,59,59);txs=txs.filter(t=>new Date(t.waktu)<=td)}
+  const badgeEl=document.getElementById('laporan-store-badge');
+  if(badgeEl){
+    if(currentUser&&currentUser.storeId!==null){badgeEl.innerHTML=`<span class="badge badge-info" style="margin-left:.5rem">${storeName(currentUser.storeId)}</span>`}
+    else if(dashboardStoreFilter){badgeEl.innerHTML=`<span class="badge badge-info" style="margin-left:.5rem">${storeName(dashboardStoreFilter)} <a href="#" onclick="dashboardStoreFilter=null;renderLaporan();return false" style="color:inherit;margin-left:.3rem">✕</a></span>`}
+    else{badgeEl.innerHTML=`<span class="badge badge-success" style="margin-left:.5rem">Semua Toko</span>`}
+  }
   const totalPenjualan=txs.reduce((s,t)=>s+t.total,0);
   const jumlahTx=txs.length;
   const avgTx=jumlahTx?Math.round(totalPenjualan/jumlahTx):0;
@@ -1289,6 +1508,7 @@ function renderLaporan(){
     const d=new Date(t.waktu);
     return `<tr>
       <td>${d.toLocaleDateString('id-ID')} ${d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</td>
+      <td><span class="badge badge-info">${t.storeId?storeName(t.storeId):'-'}</span></td>
       <td><span class="badge badge-purple">${t.no}</span></td>
       <td>${t.customer}</td>
       <td style="font-size:.8rem">${t.items.map(i=>`${i.emoji}${i.nama}(${i.qty})`).join(', ')}</td>
@@ -1300,7 +1520,7 @@ function renderLaporan(){
   }).join('');
 }
 
-function filterLaporan(){renderLaporan()}
+function filterLaporan(){dashboardStoreFilter=null;renderLaporan()}
 
 function sendWA(){
   const num=document.getElementById('wa-number').value;
@@ -1660,7 +1880,7 @@ function renderAkunTable(){
           ${u.nama}
         </div>
       </td>
-      <td><span class="badge ${u.role==='owner'?'badge-warning':'badge-info'}">${u.role}</span></td>
+      <td><span class="badge ${u.role==='owner'?'badge-warning':u.role==='admin'?'badge-admin':'badge-info'}">${u.role}</span> <span style="font-size:.75rem;color:var(--text2)">${u.storeId?storeName(u.storeId):'Semua Toko'}</span></td>
       <td style="font-family:monospace">****</td>
       <td><span class="badge badge-success">Aktif</span></td>
       <td>
@@ -1670,10 +1890,22 @@ function renderAkunTable(){
     </tr>`).join('');
 }
 
+function populateUserStoreSelect(){
+  document.getElementById('user-store-input').innerHTML=db.stores.map(s=>`<option value="${s.id}">${s.nama}</option>`).join('');
+}
+
+function onUserRoleChange(){
+  const role=document.getElementById('user-role-input').value;
+  document.getElementById('user-store-group').style.display=role==='staff'?'block':'none';
+}
+
 function openAddUser(){
   editUserId=null;
   document.getElementById('user-modal-title').textContent='Tambah Akun';
   ['user-nama-input','user-pin-input'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('user-role-input').value='staff';
+  populateUserStoreSelect();
+  onUserRoleChange();
   document.getElementById('user-modal').style.display='flex';
 }
 
@@ -1684,6 +1916,9 @@ function openEditUser(id){
   document.getElementById('user-role-input').value=u.role;
   document.getElementById('user-pin-input').value=u.pin;
   document.getElementById('user-color-input').value=u.color;
+  populateUserStoreSelect();
+  if(u.storeId)document.getElementById('user-store-input').value=u.storeId;
+  onUserRoleChange();
   document.getElementById('user-modal').style.display='flex';
 }
 
@@ -1692,10 +1927,12 @@ function saveUser(){
   const role=document.getElementById('user-role-input').value;
   const pin=document.getElementById('user-pin-input').value;
   const color=document.getElementById('user-color-input').value;
+  const storeId=role==='staff'?parseInt(document.getElementById('user-store-input').value):null;
   if(!nama||!pin){toast('Nama dan PIN wajib diisi','error');return}
+  if(role==='staff'&&!storeId){toast('Pilih toko untuk akun staff/kasir','error');return}
   const initials=nama.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-  if(editUserId){Object.assign(db.users.find(u=>u.id===editUserId),{nama,role,pin,color,initials})}
-  else{db.users.push({id:Date.now(),nama,role,pin,color,initials})}
+  if(editUserId){Object.assign(db.users.find(u=>u.id===editUserId),{nama,role,pin,color,initials,storeId})}
+  else{db.users.push({id:Date.now(),nama,role,pin,color,initials,storeId})}
   saveDB();renderAkunTable();renderUserList();
   document.getElementById('user-modal').style.display='none';
   toast('✅ Akun disimpan!','success');
@@ -1722,10 +1959,59 @@ function saveTokoSettings(){
   saveDB();toast('✅ Pengaturan disimpan!','success');
 }
 
+// ============ DASHBOARD MULTI-TOKO ============
+function renderDashboard(){
+  const today=new Date().toLocaleDateString('id-ID');
+  const todayTxs=db.transactions.filter(t=>new Date(t.waktu).toLocaleDateString('id-ID')===today);
+
+  const perStore=db.stores.map(s=>{
+    const txs=todayTxs.filter(t=>t.storeId===s.id);
+    const omset=txs.reduce((sum,t)=>sum+t.total,0);
+    const jumlahTx=txs.length;
+    const staffToko=db.users.filter(u=>u.storeId===s.id);
+    const todayStr=new Date().toISOString().split('T')[0];
+    const staffAktif=staffToko.filter(u=>db.absensi.some(a=>a.userId===u.id&&a.tanggal===todayStr&&a.masuk&&!a.keluar)).length;
+    return {store:s,omset,jumlahTx,staffToko:staffToko.length,staffAktif};
+  });
+
+  const totalOmset=perStore.reduce((s,p)=>s+p.omset,0);
+  const totalTx=perStore.reduce((s,p)=>s+p.jumlahTx,0);
+  const totalStaffAktif=perStore.reduce((s,p)=>s+p.staffAktif,0);
+  document.getElementById('dash-total-omset').textContent=fmtRp(totalOmset);
+  document.getElementById('dash-total-tx').textContent=totalTx;
+  document.getElementById('dash-total-staff').textContent=totalStaffAktif;
+
+  const maxOmset=Math.max(...perStore.map(p=>p.omset),1);
+  const topStoreId=[...perStore].sort((a,b)=>b.omset-a.omset)[0]?.store.id;
+
+  document.getElementById('dashboard-store-grid').innerHTML=perStore.map(p=>`
+    <div class="store-card ${p.store.id===topStoreId&&p.omset>0?'top':''}" onclick="goToStoreLaporan(${p.store.id})">
+      <h4>🏪 ${p.store.nama}</h4>
+      <div class="staff-count">👤 ${p.staffAktif}/${p.staffToko} staff aktif hari ini</div>
+      <div class="omset">${fmtRp(p.omset)}</div>
+      <div class="sub"><span>🧾 ${p.jumlahTx} transaksi</span><span>${p.jumlahTx?fmtRp(Math.round(p.omset/p.jumlahTx)):fmtRp(0)}/tx</span></div>
+    </div>`).join('');
+
+  document.getElementById('dashboard-mini-chart').innerHTML=perStore.map(p=>`
+    <div class="bar" style="height:${Math.max(4,(p.omset/maxOmset)*100)}%">
+      <span class="bar-label">${p.store.nama.replace('Cabang ','')}</span>
+      <span class="bar-val">${fmtRp(p.omset)}</span>
+    </div>`).join('')+'<div class="chart-axis"></div>';
+}
+
+function goToStoreLaporan(storeId){
+  // Owner/admin dapat lompat langsung melihat laporan toko tertentu
+  document.getElementById('from-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('to-date').value=new Date().toISOString().split('T')[0];
+  dashboardStoreFilter=storeId;
+  showPage('laporan');
+}
+
 // ============ FLOATING CHART ============
 function updateFloatingChart(){
   const today=new Date().toLocaleDateString('id-ID');
-  const todayTxs=db.transactions.filter(t=>new Date(t.waktu).toLocaleDateString('id-ID')===today);
+  let todayTxs=db.transactions.filter(t=>new Date(t.waktu).toLocaleDateString('id-ID')===today);
+  if(currentUser&&currentUser.storeId!==null){todayTxs=todayTxs.filter(t=>t.storeId===currentUser.storeId)}
   const totalToday=todayTxs.reduce((s,t)=>s+t.total,0);
   document.getElementById('chart-total-today').textContent=fmtRp(totalToday);
   
@@ -1762,6 +2048,9 @@ function toast(msg,type='info'){
 function fmtRp(n){return new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(n)}
 
 // ============ INIT ============
+loadLocalDB();
+initFirebase();
+loadFromFirebase();
 renderUserList();
 document.getElementById('pin-input').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
 </script>
