@@ -191,16 +191,20 @@ tr:hover td{background:var(--bg3)}
 .stock-indicator{display:inline-flex;align-items:center;gap:.3rem;font-size:.78rem;margin-top:.25rem}
 
 /* FLOATING CHART */
-.floating-chart {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%); /* Menengahkan elemen secara presisi */
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+.floating-chart{position:fixed;bottom:1.5rem;right:1.5rem;z-index:500;cursor:move}
+.chart-toggle{width:52px;height:52px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;font-size:1.3rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(124,106,247,.5);transition:all .2s}
+.chart-toggle:hover{transform:scale(1.1)}
+.chart-popup{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r2);padding:1rem;width:min(320px,90vw);margin-bottom:.7rem;box-shadow:var(--shadow);display:none}
+.chart-popup.show{display:block}
+.chart-popup h4{font-size:.9rem;margin-bottom:.75rem;font-family:'Space Grotesk',sans-serif}
+.mini-chart{height:120px;position:relative;display:flex;align-items:flex-end;gap:4px;padding-bottom:20px}
+.bar{flex:1;border-radius:4px 4px 0 0;background:var(--accent);opacity:.7;min-height:4px;transition:all .3s;position:relative}
+.bar:hover{opacity:1}
+.bar-label{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:.6rem;color:var(--text2);white-space:nowrap}
+.bar-val{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:.65rem;color:var(--accent2);white-space:nowrap;display:none}
+.bar:hover .bar-val{display:block}
+.chart-axis{position:absolute;bottom:20px;left:0;right:0;border-top:1px solid var(--border);pointer-events:none}
+
 /* ABSENSI */
 .staff-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.75rem}
 .staff-absen-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:1rem;text-align:center}
@@ -1100,7 +1104,7 @@ function initApp(){
     storeRow.style.display='none';
   }
 
-  document.getElementById('floating-chart').style.display='none';
+  document.getElementById('floating-chart').style.display='block';
   
   renderCategoryTabs();
   renderMenuGrid();
@@ -2154,19 +2158,6 @@ function toggleChart(){
   chartVisible=!chartVisible;
   document.getElementById('chart-popup').classList.toggle('show',chartVisible);
   if(chartVisible)updateFloatingChart();
-}
-
-function updateCart() {
-  // ... (kode bawaan updateCart yang sudah ada sebelumnya) ...
-
-  // Tambahkan kode ini di baris paling akhir fungsi updateCart:
-  const floatingChart = document.getElementById('floating-chart');
-  if (cart.length > 0) {
-    floatingChart.style.display = 'flex'; // Munculkan tombol di tengah
-  } else {
-    floatingChart.style.display = 'none'; // Sembunyikan jika keranjang kosong
-    document.getElementById('chart-popup').classList.remove('show'); // Tutup popup chart
-  }
 }
 
 // ============ TOAST ============
