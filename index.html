@@ -390,7 +390,7 @@ select option{background:var(--bg3)}
           <span class="nav-icon">🧮</span> Kalkulator
         </div>
         <div class="nav-label" id="nav-owner-section" style="display:none">Owner</div>
-        <div class="nav-item owner-only" onclick="showPage('menu')" style="display:none" data-label="Kelola Menu">
+        <div class="nav-item owner-admin-only" onclick="showPage('menu')" style="display:none" data-label="Kelola Menu">
           <span class="nav-icon">🍽️</span> Kelola Menu
         </div>
         <div class="nav-item owner-only" onclick="showPage('topping')" style="display:none" data-label="Kelola Topping">
@@ -594,8 +594,16 @@ select option{background:var(--bg3)}
         <!-- KELOLA MENU -->
         <div class="page" id="page-menu">
           <div class="section-header">
-            <h3>🍽️ Kelola Menu</h3>
+            <div>
+              <h3>🍽️ Kelola Menu per Toko</h3>
+              <div style="font-size:.78rem;color:var(--text2);margin-top:.25rem">Atur nama, harga, stok, dan status menu khusus untuk toko yang dipilih.</div>
+            </div>
             <button class="btn btn-primary btn-sm" onclick="openAddMenu()">+ Tambah Menu</button>
+          </div>
+          <div class="store-select-row" style="margin-bottom:1rem">
+            <span style="font-size:.85rem;color:var(--text2)">🏪 Kelola toko:</span>
+            <select id="menu-store-select" onchange="onMenuStoreChange()"></select>
+            <span id="menu-store-hint" style="font-size:.75rem;color:var(--text2)"></span>
           </div>
           <div class="menu-mgmt-grid" id="menu-mgmt-grid"></div>
         </div>
@@ -829,22 +837,22 @@ select option{background:var(--bg3)}
 let db = {
   settings:{nama:'Mazboy Group',alamat:'Jl. Kalibaru Timur III',telp:'085117010280',footer:'Terima kasih telah berkunjung! 🙏'},
   stores:[
-    {id:1,nama:'Cabang Pancong',alamat:'Jl. Kalibaru Timur III'},
-    {id:2,nama:'Cabang Takoyaki',alamat:'Jl. Cempaka Putih'},
-    {id:3,nama:'Cabang Kopi RImba',alamat:'Jl. Jend. Sudirman'},
-    {id:4,nama:'Cabang Cilor',alamat:'Jl. Kelapa Gading'},
-    {id:5,nama:'Cabang Bento/Jamu',alamat:'Jl. Ahmad Yani, Bekasi'},
+    {id:1,nama:'Cabang Kalibaru',alamat:'Jl. Kalibaru Timur III'},
+    {id:2,nama:'Cabang Cempaka',alamat:'Jl. Cempaka Putih'},
+    {id:3,nama:'Cabang Sudirman',alamat:'Jl. Jend. Sudirman'},
+    {id:4,nama:'Cabang Kelapa Gading',alamat:'Jl. Kelapa Gading'},
+    {id:5,nama:'Cabang Bekasi',alamat:'Jl. Ahmad Yani, Bekasi'},
   ],
   // storeId null = akses semua toko (owner/admin). Staff/kasir wajib punya storeId toko tempat bertugas.
   users:[
     {id:1,nama:'Walanduta',role:'owner',pin:'1234',color:'accent',initials:'BS',storeId:null},
-    {id:9,nama:'Aqil',role:'admin',pin:'0000',color:'pink',initials:'AD',storeId:null},
-    {id:2,nama:'Pancong',role:'staff',pin:'1111',color:'green',initials:'IQ',storeId:1},
-    {id:3,nama:'Takoyaki',role:'staff',pin:'2222',color:'blue',initials:'TG',storeId:1},
-    {id:4,nama:'Kopi Rimba',role:'staff',pin:'3333',color:'amber',initials:'DW',storeId:2},
-    {id:5,nama:'Mocktail',role:'staff',pin:'4444',color:'amber',initials:'RN',storeId:3},
-    {id:6,nama:'Cilor',role:'staff',pin:'5555',color:'amber',initials:'SR',storeId:4},
-    {id:7,nama:'Bento/Jamu',role:'staff',pin:'6666',color:'amber',initials:'BD',storeId:5},
+    {id:9,nama:'Admin Pusat',role:'admin',pin:'0000',color:'pink',initials:'AD',storeId:null},
+    {id:2,nama:'Iqbal',role:'staff',pin:'5678',color:'green',initials:'IQ',storeId:1},
+    {id:3,nama:'Tegar',role:'staff',pin:'9012',color:'blue',initials:'TG',storeId:1},
+    {id:4,nama:'Dewi',role:'staff',pin:'1111',color:'amber',initials:'DW',storeId:2},
+    {id:5,nama:'Rian',role:'staff',pin:'2222',color:'amber',initials:'RN',storeId:3},
+    {id:6,nama:'Sari',role:'staff',pin:'3333',color:'amber',initials:'SR',storeId:4},
+    {id:7,nama:'Budi',role:'staff',pin:'4444',color:'amber',initials:'BD',storeId:5},
   ],
   menus:[
     {id:1,emoji:'🐙',nama:'Takoyaki Small',kategori:'Makanan',harga:10000,stok:50,avail:true},
@@ -877,6 +885,39 @@ let db = {
   absensi:[],
   nextTxId:1
 };
+
+// ============ MENU PER TOKO ============
+function normalizeMenuStoreSettings(menu){
+  if(!menu || !Array.isArray(db.stores)) return menu;
+  if(!menu.storeSettings || typeof menu.storeSettings !== 'object') menu.storeSettings = {};
+  db.stores.forEach(store => {
+    const key=String(store.id);
+    if(!menu.storeSettings[key]){
+      menu.storeSettings[key]={
+        nama:menu.nama, emoji:menu.emoji, kategori:menu.kategori,
+        harga:Number(menu.harga)||0, stok:Number(menu.stok)||0, avail:menu.avail!==false
+      };
+    }
+  });
+  return menu;
+}
+
+function normalizeAllMenuStores(){
+  if(!Array.isArray(db.menus)) return;
+  db.menus.forEach(normalizeMenuStoreSettings);
+}
+
+function getMenuForStore(menu, storeId=currentStoreId){
+  normalizeMenuStoreSettings(menu);
+  const cfg=menu.storeSettings?.[String(storeId)];
+  return {...menu, ...(cfg||{}), baseId:menu.id};
+}
+
+function getMenuConfig(menu, storeId){
+  normalizeMenuStoreSettings(menu);
+  const key=String(storeId);
+  return menu.storeSettings[key] || {nama:menu.nama,emoji:menu.emoji,kategori:menu.kategori,harga:menu.harga,stok:menu.stok,avail:menu.avail!==false};
+}
 
 // ============ PERSISTENCE / FIREBASE ============
 const firebaseConfig = {
@@ -932,6 +973,7 @@ function loadLocalDB() {
       absensi: Array.isArray(saved.absensi) ? saved.absensi : db.absensi,
       nextTxId: Number(saved.nextTxId) || db.nextTxId
     };
+    normalizeAllMenuStores();
     return true;
   } catch (error) {
     console.warn('Gagal memuat data lokal:', error);
@@ -957,6 +999,7 @@ function loadFromFirebase() {
     const data = snapshot.val();
     if (!data) return;
     if (Array.isArray(data.menus)) db.menus = data.menus;
+    normalizeAllMenuStores();
     if (Array.isArray(data.users)) db.users = data.users;
     if (Array.isArray(data.toppings)) db.toppings = data.toppings;
     if (Array.isArray(data.stores)) db.stores = data.stores;
@@ -1031,6 +1074,8 @@ function refreshAllUI() {
 }
 
 function initApp(){
+  normalizeAllMenuStores();
+  menuManagementStoreId=currentUser.storeId ?? currentStoreId ?? db.stores[0]?.id ?? null;
   document.getElementById('sidebar-name').textContent=currentUser.nama;
   document.getElementById('sidebar-role').textContent=currentUser.role+(currentUser.storeId?' · '+storeName(currentUser.storeId):' · Semua Toko');
   const av=document.getElementById('sidebar-avatar');
@@ -1038,14 +1083,12 @@ function initApp(){
   av.style.background=`var(--${currentUser.color}-bg,var(--accent-bg))`;
   av.style.color=`var(--${currentUser.color},var(--accent))`;
   
-  // Show owner-only items
+  // Hak akses owner/admin. Menu per toko dapat dikelola oleh keduanya.
+  const isMultiStoreUser=currentUser.role==='owner'||currentUser.role==='admin';
   const ownerItems=document.querySelectorAll('.owner-only');
   ownerItems.forEach(el=>{el.style.display=currentUser.role==='owner'?'flex':'none'});
-  document.getElementById('nav-owner-section').style.display=currentUser.role==='owner'?'block':'none';
-
-  // Show multi-store dashboard for owner & admin (roles with storeId===null / full access)
-  const isMultiStoreUser=currentUser.role==='owner'||currentUser.role==='admin';
   document.querySelectorAll('.owner-admin-only').forEach(el=>{el.style.display=isMultiStoreUser?'flex':'none'});
+  document.getElementById('nav-owner-section').style.display=isMultiStoreUser?'block':'none';
   document.getElementById('nav-dashboard-section').style.display=isMultiStoreUser?'block':'none';
 
   // Setup active store context for Kasir. Staff selalu terkunci ke toko mereka;
@@ -1095,6 +1138,10 @@ function updateClock(){
 
 // ============ NAVIGATION ============
 function showPage(name){
+  if((name==='menu') && currentUser?.role!=='owner' && currentUser?.role!=='admin'){
+    toast('Akses kelola menu hanya untuk Owner/Admin','error');
+    return;
+  }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const targetPage=document.getElementById('page-'+name);
@@ -1133,11 +1180,16 @@ let dashboardStoreFilter=null;
 
 function onKasirStoreChange(){
   currentStoreId=parseInt(document.getElementById('kasir-store-select').value);
+  renderCategoryTabs();
+  renderMenuGrid();
+  renderMenuMgmt();
+  renderStokTable();
   toast(`🏪 Kasir aktif untuk: ${storeName(currentStoreId)}`,'info');
 }
 
 function renderCategoryTabs(){
-  const cats=['Semua',...new Set(db.menus.map(m=>m.kategori))];
+  normalizeAllMenuStores();
+  const cats=['Semua',...new Set(db.menus.map(m=>getMenuForStore(m,currentStoreId).kategori))];
   document.getElementById('category-tabs').innerHTML=cats.map(c=>`<div class="cat-tab ${c===activeCategory?'active':''}" onclick="setCategory('${c}')">${c}</div>`).join('');
 }
 
@@ -1146,27 +1198,33 @@ function setCategory(cat){activeCategory=cat;renderCategoryTabs();renderMenuGrid
 function filterMenu(){renderMenuGrid()}
 
 function renderMenuGrid(){
+  normalizeAllMenuStores();
   const q=document.getElementById('menu-search').value.toLowerCase();
-  let menus=db.menus.filter(m=>{
+  const menus=db.menus.map(m=>getMenuForStore(m,currentStoreId)).filter(m=>{
     const catOk=activeCategory==='Semua'||m.kategori===activeCategory;
     const searchOk=m.nama.toLowerCase().includes(q);
     return catOk&&searchOk;
   });
-  document.getElementById('menu-grid').innerHTML=menus.map(m=>`
-    <div class="menu-card ${!m.avail||m.stok<=0?'out-stock':''}" onclick="addToCartModal(${m.id})">
+  document.getElementById('menu-grid').innerHTML=menus.map(m=>{
+    const base=db.menus.find(x=>x.id===m.baseId);
+    return `
+    <div class="menu-card ${!m.avail||m.stok<=0?'out-stock':''}" onclick="addToCartModal(${base.id})">
       ${m.stok<=10&&m.avail?`<span class="stock-badge">Stok ${m.stok}</span>`:''}
       <span class="menu-emoji">${m.emoji}</span>
       <div class="menu-name">${m.nama}</div>
       <div class="menu-cat">${m.kategori}</div>
       <div class="menu-price">${fmtRp(m.harga)}</div>
       ${!m.avail?'<div style="font-size:.72rem;color:var(--red);margin-top:.25rem">Habis</div>':''}
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function addToCartModal(id){
-  const menu=db.menus.find(m=>m.id===id);
-  selectedMenuForCart=menu;
+  const base=db.menus.find(m=>m.id===id);
+  if(!base)return;
+  const menu=getMenuForStore(base,currentStoreId);
+  if(!menu.avail || menu.stok<=0){toast('Menu tidak tersedia di toko ini','error');return}
+  selectedMenuForCart={...menu, id:base.id};
   selectedToppings=[];
   document.getElementById('modal-note').value='';
   document.getElementById('modal-item-preview').innerHTML=`
@@ -1325,10 +1383,13 @@ function checkout(){
     kasir:currentUser.nama,
     storeId:currentStoreId
   };
-  // Update stok
+  // Update stok hanya untuk toko yang sedang aktif.
   cart.forEach(item=>{
     const menu=db.menus.find(m=>m.id===item.id);
-    if(menu)menu.stok=Math.max(0,menu.stok-item.qty);
+    if(menu){
+      const cfg=getMenuConfig(menu,currentStoreId);
+      menu.storeSettings[String(currentStoreId)]={...cfg,stok:Math.max(0,cfg.stok-item.qty)};
+    }
   });
   db.transactions.push(tx);
   saveDB();
@@ -1615,15 +1676,19 @@ function exportCSV(){
 
 // ============ STOK OPNAME ============
 function renderStokTable(){
-  document.getElementById('stok-tbody').innerHTML=db.menus.map(m=>`
+  normalizeAllMenuStores();
+  document.getElementById('stok-tbody').innerHTML=db.menus.map(base=>{
+    const m=getMenuConfig(base,currentStoreId);
+    return `
     <tr>
       <td>${m.emoji} ${m.nama}</td>
       <td>${m.kategori}</td>
       <td>${m.stok}</td>
-      <td><input type="number" value="${m.stok}" min="0" id="stok-${m.id}" style="width:70px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:.35rem .5rem;border-radius:6px;font-size:.82rem;text-align:center" oninput="calcDiff(${m.id},${m.stok})"></td>
-      <td><span id="diff-${m.id}" class="stok-diff zero">0</span></td>
-      <td><input type="text" placeholder="Catatan..." style="width:120px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:.35rem .5rem;border-radius:6px;font-size:.78rem" id="note-stok-${m.id}"></td>
-    </tr>`).join('');
+      <td><input type="number" value="${m.stok}" min="0" id="stok-${base.id}" style="width:70px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:.35rem .5rem;border-radius:6px;font-size:.82rem;text-align:center" oninput="calcDiff(${base.id},${m.stok})"></td>
+      <td><span id="diff-${base.id}" class="stok-diff zero">0</span></td>
+      <td><input type="text" placeholder="Catatan..." style="width:120px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:.35rem .5rem;border-radius:6px;font-size:.78rem" id="note-stok-${base.id}"></td>
+    </tr>`;
+  }).join('');
 }
 
 function calcDiff(id,sistem){
@@ -1635,11 +1700,15 @@ function calcDiff(id,sistem){
 }
 
 function saveStok(){
-  db.menus.forEach(m=>{
-    const el=document.getElementById('stok-'+m.id);
-    if(el)m.stok=parseInt(el.value)||0;
+  normalizeAllMenuStores();
+  db.menus.forEach(base=>{
+    const el=document.getElementById('stok-'+base.id);
+    if(el){
+      const cfg=getMenuConfig(base,currentStoreId);
+      base.storeSettings[String(currentStoreId)]={...cfg,stok:Math.max(0,parseInt(el.value)||0)};
+    }
   });
-  saveDB();renderMenuGrid();renderStokTable();toast('✅ Stok berhasil disimpan!','success');
+  saveDB();renderMenuGrid();renderStokTable();renderMenuMgmt();toast(`✅ Stok ${storeName(currentStoreId)} berhasil disimpan!`,'success');
 }
 
 // ============ ABSENSI ============
@@ -1747,8 +1816,39 @@ function updateCalcDisplay(){
 
 // ============ MENU MANAGEMENT ============
 let editMenuId=null;
+let menuManagementStoreId=null;
+
+function initMenuStoreSelector(){
+  const sel=document.getElementById('menu-store-select');
+  if(!sel)return;
+  if(!menuManagementStoreId) menuManagementStoreId=currentUser?.storeId ?? currentStoreId ?? db.stores[0]?.id ?? null;
+  if(currentUser?.role==='owner' || currentUser?.role==='admin') {
+    sel.innerHTML=db.stores.map(s=>`<option value="${s.id}">${s.nama}</option>`).join('');
+    sel.disabled=false;
+  } else {
+    sel.innerHTML=currentUser?.storeId ? `<option value="${currentUser.storeId}">${storeName(currentUser.storeId)}</option>` : '';
+    sel.disabled=true;
+    menuManagementStoreId=currentUser?.storeId;
+  }
+  if(menuManagementStoreId!=null) sel.value=String(menuManagementStoreId);
+  const hint=document.getElementById('menu-store-hint');
+  if(hint) hint.textContent=menuManagementStoreId!=null?`Perubahan hanya berlaku untuk ${storeName(menuManagementStoreId)}.`:'';
+}
+
+function onMenuStoreChange(){
+  menuManagementStoreId=parseInt(document.getElementById('menu-store-select').value);
+  renderMenuMgmt();
+}
+
 function renderMenuMgmt(){
-  document.getElementById('menu-mgmt-grid').innerHTML=db.menus.map(m=>`
+  normalizeAllMenuStores();
+  initMenuStoreSelector();
+  const sid=menuManagementStoreId;
+  const list=document.getElementById('menu-mgmt-grid');
+  if(sid==null){list.innerHTML='<div style="color:var(--text2)">Pilih toko terlebih dahulu.</div>';return}
+  list.innerHTML=db.menus.map(base=>{
+    const m=getMenuConfig(base,sid);
+    return `
     <div class="menu-mgmt-card">
       <div class="emoji">${m.emoji}</div>
       <div class="info">
@@ -1757,28 +1857,33 @@ function renderMenuMgmt(){
         <div class="stock-indicator">
           <span style="width:8px;height:8px;border-radius:50%;background:${m.stok>10?'var(--green)':m.stok>0?'var(--amber)':'var(--red)'};display:inline-block"></span>
           Stok: ${m.stok}
+          ${m.avail?'':' · Nonaktif'}
         </div>
         <div class="actions">
-          <button class="btn btn-ghost btn-sm" onclick="openEditMenu(${m.id})">✏️ Edit</button>
-          <button class="btn btn-sm" style="background:${m.avail?'var(--green-bg)':'var(--red-bg)'};color:${m.avail?'var(--green)':'var(--red)'};border:none" onclick="toggleMenuAvail(${m.id})">${m.avail?'✅ Aktif':'❌ Nonaktif'}</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteMenu(${m.id})">🗑️</button>
+          <button class="btn btn-ghost btn-sm" onclick="openEditMenu(${base.id})">✏️ Edit toko ini</button>
+          <button class="btn btn-sm" style="background:${m.avail?'var(--green-bg)':'var(--red-bg)'};color:${m.avail?'var(--green)':'var(--red)'};border:none" onclick="toggleMenuAvail(${base.id})">${m.avail?'✅ Aktif':'❌ Nonaktif'}</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteMenu(${base.id})">🗑️ Hapus\</button>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function openAddMenu(){
   editMenuId=null;
-  document.getElementById('menu-modal-title').textContent='Tambah Menu';
+  document.getElementById('menu-modal-title').textContent=`Tambah Menu — ${storeName(menuManagementStoreId)}`;
   ['emoji','nama-input','harga-input'].forEach(f=>document.getElementById('menu-'+f).value='');
   document.getElementById('menu-stok-input').value=100;
+  document.getElementById('menu-avail-input').value='1';
   document.getElementById('menu-modal').style.display='flex';
 }
 
 function openEditMenu(id){
-  const m=db.menus.find(x=>x.id===id);
+  const base=db.menus.find(x=>x.id===id);
+  if(!base)return;
   editMenuId=id;
-  document.getElementById('menu-modal-title').textContent='Edit Menu';
+  const m=getMenuConfig(base,menuManagementStoreId);
+  document.getElementById('menu-modal-title').textContent=`Edit Menu — ${storeName(menuManagementStoreId)}`;
   document.getElementById('menu-emoji').value=m.emoji;
   document.getElementById('menu-nama-input').value=m.nama;
   document.getElementById('menu-kategori-input').value=m.kategori;
@@ -1789,32 +1894,54 @@ function openEditMenu(id){
 }
 
 function saveMenu(){
+  if(menuManagementStoreId==null){toast('Pilih toko terlebih dahulu','error');return}
   const data={
-    emoji:document.getElementById('menu-emoji').value||'🍽️',
-    nama:document.getElementById('menu-nama-input').value,
+    emoji:document.getElementById('menu-emoji').value.trim()||'🍽️',
+    nama:document.getElementById('menu-nama-input').value.trim(),
     kategori:document.getElementById('menu-kategori-input').value,
     harga:parseInt(document.getElementById('menu-harga-input').value)||0,
-    stok:parseInt(document.getElementById('menu-stok-input').value)||0,
-    avail:document.getElementById('menu-avail-input').value==='1',
+    stok:Math.max(0,parseInt(document.getElementById('menu-stok-input').value)||0),
+    avail:document.getElementById('menu-avail-input').value==='1'
   };
   if(!data.nama){toast('Nama menu wajib diisi','error');return}
-  if(editMenuId){Object.assign(db.menus.find(m=>m.id===editMenuId),data)}
-  else{db.menus.push({id:Date.now(),...data})}
-  saveDB();renderMenuMgmt();renderMenuGrid();renderCategoryTabs();
+  normalizeAllMenuStores();
+  if(editMenuId){
+    const base=db.menus.find(m=>m.id===editMenuId);
+    base.storeSettings[String(menuManagementStoreId)]={...data};
+  } else {
+    const id=Date.now();
+    const base={id,...data,storeSettings:{}};
+    db.stores.forEach(s=>{
+      base.storeSettings[String(s.id)]={...data,avail:false,stok:0};
+    });
+    base.storeSettings[String(menuManagementStoreId)]={...data};
+    db.menus.push(base);
+  }
+  saveDB();
+  renderMenuMgmt();
+  renderMenuGrid();
+  renderCategoryTabs();
   document.getElementById('menu-modal').style.display='none';
-  toast('✅ Menu disimpan!','success');
+  toast(`✅ Menu disimpan untuk ${storeName(menuManagementStoreId)}!`,'success');
 }
 
 function toggleMenuAvail(id){
-  const m=db.menus.find(x=>x.id===id);m.avail=!m.avail;
+  const base=db.menus.find(x=>x.id===id);
+  if(!base||menuManagementStoreId==null)return;
+  const cfg=getMenuConfig(base,menuManagementStoreId);
+  base.storeSettings[String(menuManagementStoreId)]={...cfg,avail:!cfg.avail};
   saveDB();renderMenuMgmt();renderMenuGrid();
 }
 
 function deleteMenu(id){
-  if(!confirm('Hapus menu ini?'))return;
-  db.menus=db.menus.filter(m=>m.id!==id);
+  if(currentUser?.role!=='owner' && currentUser?.role!=='admin'){toast('Akses ditolak','error');return}
+  const base=db.menus.find(x=>x.id===id);
+  if(!base || menuManagementStoreId==null)return;
+  const cfg=getMenuConfig(base,menuManagementStoreId);
+  if(!confirm(`Nonaktifkan menu \"${cfg.nama}\" hanya di ${storeName(menuManagementStoreId)}?`))return;
+  base.storeSettings[String(menuManagementStoreId)]={...cfg,avail:false,stok:0};
   saveDB();renderMenuMgmt();renderMenuGrid();renderCategoryTabs();
-  toast('Menu dihapus','info');
+  toast(`Menu dinonaktifkan di ${storeName(menuManagementStoreId)}`,'info');
 }
 
 // ============ TOPPING MANAGEMENT ============
