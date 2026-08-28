@@ -46,6 +46,7 @@ h1,h2,h3{font-family:'Space Grotesk',sans-serif}
 .user-list{display:grid;gap:.5rem;margin-bottom:1.5rem}
 .user-item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:.75rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.75rem;transition:all .2s}
 .user-item:hover{border-color:var(--accent);background:var(--accent-bg)}
+.user-item.selected{border-color:var(--accent);background:var(--accent-bg);box-shadow:0 0 0 1px var(--accent)}
 .user-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;flex-shrink:0}
 .role-badge{font-size:.7rem;padding:.2rem .5rem;border-radius:20px;font-weight:600;margin-left:auto}
 .badge-owner{background:var(--amber-bg);color:var(--amber)}
@@ -190,13 +191,15 @@ tr:hover td{background:var(--bg3)}
 .menu-mgmt-card .actions{display:flex;gap:.3rem;margin-top:.5rem}
 .stock-indicator{display:inline-flex;align-items:center;gap:.3rem;font-size:.78rem;margin-top:.25rem}
 
-/* FLOATING CHART */
-.floating-chart{position:fixed;bottom:1.5rem;right:1.5rem;z-index:500;cursor:move}
-.chart-toggle{width:52px;height:52px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;font-size:1.3rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(124,106,247,.5);transition:all .2s}
-.chart-toggle:hover{transform:scale(1.1)}
-.chart-popup{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r2);padding:1rem;width:min(320px,90vw);margin-bottom:.7rem;box-shadow:var(--shadow);display:none}
-.chart-popup.show{display:block}
-.chart-popup h4{font-size:.9rem;margin-bottom:.75rem;font-family:'Space Grotesk',sans-serif}
+/* FLOATING CHART POPUP (muncul di tengah layar hanya setelah transaksi selesai diproses) */
+.floating-chart-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:2500;padding:1rem;animation:fadeInChartOverlay .2s ease}
+.floating-chart-overlay.show{display:flex}
+.chart-popup-center{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r3);padding:1.25rem;width:min(340px,92vw);box-shadow:var(--shadow);animation:popCenterChart .35s cubic-bezier(.34,1.56,.64,1)}
+.chart-popup-center-header{display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;margin-bottom:.4rem}
+.chart-popup-center-header h4{font-size:.92rem;font-family:'Space Grotesk',sans-serif;line-height:1.3}
+.chart-popup-center-sub{font-size:.75rem;color:var(--green);font-weight:600;margin-bottom:.75rem}
+@keyframes popCenterChart{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes fadeInChartOverlay{from{opacity:0}to{opacity:1}}
 .mini-chart{height:120px;position:relative;display:flex;align-items:flex-end;gap:4px;padding-bottom:20px}
 .bar{flex:1;border-radius:4px 4px 0 0;background:var(--accent);opacity:.7;min-height:4px;transition:all .3s;position:relative}
 .bar:hover{opacity:1}
@@ -690,18 +693,21 @@ select option{background:var(--bg3)}
   </div>
 </div>
 
-<!-- FLOATING CHART -->
-<div class="floating-chart" id="floating-chart" style="display:none">
-  <div class="chart-popup" id="chart-popup">
-    <h4>📈 Penjualan Hari Ini</h4>
+<!-- FLOATING CHART POPUP: tersembunyi, hanya muncul otomatis di tengah layar setelah staff menyelesaikan & menutup struk transaksi -->
+<div class="floating-chart-overlay" id="floating-chart-overlay" onclick="if(event.target===this)closeFloatingChartPopup()">
+  <div class="chart-popup-center" id="chart-popup-center">
+    <div class="chart-popup-center-header">
+      <h4>📈 Penjualan Hari Ini</h4>
+      <button class="close-btn" onclick="closeFloatingChartPopup()">✕</button>
+    </div>
+    <div class="chart-popup-center-sub">✅ Transaksi tercatat, siap layani pesanan berikutnya</div>
     <div style="display:flex;justify-content:space-between;margin-bottom:.5rem">
       <span style="font-size:.75rem;color:var(--text2)">Per jam</span>
       <span style="font-size:.8rem;font-weight:700;color:var(--accent2)" id="chart-total-today">Rp 0</span>
     </div>
     <div class="mini-chart" id="mini-chart"></div>
-    <button onclick="showPage('laporan')" class="btn btn-ghost btn-sm" style="width:100%;margin-top:.5rem">Lihat Detail ↗</button>
+    <button onclick="showPage('laporan');closeFloatingChartPopup()" class="btn btn-ghost btn-sm" style="width:100%;margin-top:.6rem">Lihat Detail ↗</button>
   </div>
-  <button class="chart-toggle" onclick="toggleChart()">📈</button>
 </div>
 
 <!-- TOAST CONTAINER -->
@@ -932,6 +938,20 @@ const firebaseConfig = {
 let database = null;
 let firebaseReady = false;
 
+// Logger aman: beberapa lingkungan preview/embed tidak menyediakan semua method
+// console (mis. console.info bisa hilang), yang tadinya menyebabkan seluruh
+// script berhenti di tengah jalan (uncaught TypeError) sebelum sempat
+// merender daftar akun di layar login. Fungsi ini tidak akan pernah melempar error.
+function safeLog(level, ...args){
+  try{
+    if (typeof console !== 'undefined' && typeof console[level] === 'function') {
+      console[level](...args);
+    } else if (typeof console !== 'undefined' && typeof console.log === 'function') {
+      console.log(...args);
+    }
+  }catch(e){ /* abaikan, logging tidak boleh pernah menghentikan aplikasi */ }
+}
+
 function isFirebaseConfigured() {
   return !!window.firebase &&
     firebaseConfig.apiKey && !firebaseConfig.apiKey.includes('API_KEY_ANDA') &&
@@ -941,7 +961,7 @@ function isFirebaseConfigured() {
 
 function initFirebase() {
   if (!isFirebaseConfigured()) {
-    console.info('Firebase belum dikonfigurasi. Aplikasi berjalan menggunakan localStorage.');
+    safeLog('log', 'Firebase belum dikonfigurasi. Aplikasi berjalan menggunakan localStorage.');
     return false;
   }
   try {
@@ -950,7 +970,7 @@ function initFirebase() {
     firebaseReady = true;
     return true;
   } catch (error) {
-    console.warn('Firebase tidak dapat diinisialisasi:', error);
+    safeLog('warn', 'Firebase tidak dapat diinisialisasi:', error);
     database = null;
     firebaseReady = false;
     return false;
@@ -975,7 +995,7 @@ function loadLocalDB() {
     normalizeAllMenuStores();
     return true;
   } catch (error) {
-    console.warn('Gagal memuat data lokal:', error);
+    safeLog('warn', 'Gagal memuat data lokal:', error);
     return false;
   }
 }
@@ -984,11 +1004,11 @@ function saveDB() {
   try {
     localStorage.setItem('KASIR_MAZBOY_DB', JSON.stringify(db));
   } catch (error) {
-    console.warn('Gagal menyimpan localStorage:', error);
+    safeLog('warn', 'Gagal menyimpan localStorage:', error);
   }
   if (firebaseReady && database) {
     database.ref('kasirpro_db').set(db)
-      .catch(error => console.error('Gagal sinkron Firebase:', error));
+      .catch(error => safeLog('error', 'Gagal sinkron Firebase:', error));
   }
 }
 
@@ -1009,7 +1029,7 @@ function loadFromFirebase() {
     localStorage.setItem('KASIR_MAZBOY_DB', JSON.stringify(db));
     refreshAllUI();
   }, error => {
-    console.warn('Firebase listener error:', error);
+    safeLog('warn', 'Firebase listener error:', error);
   });
 }
 
@@ -1021,9 +1041,15 @@ function storeName(id){const s=db.stores.find(x=>x.id===id);return s?s.nama:'Sem
 
 function renderUserList(){
   const ul=document.getElementById('user-list');
+  // Jika akun yang sedang dipilih ternyata sudah tidak ada lagi di data terbaru
+  // (misalnya dihapus dari perangkat lain via Firebase), batalkan pilihan supaya
+  // tidak mengacu ke akun yang sudah tidak valid.
+  if(selectedUserId!==null && !db.users.some(u=>u.id===selectedUserId)){
+    selectedUserId=null;
+  }
   ul.innerHTML=db.users.map(u=>`
     <div class="user-item ${selectedUserId===u.id?'selected':''}" onclick="selectUser(${u.id})">
-      <div class="user-avatar" style="background:var(--${u.color}-bg||var(--accent-bg));color:var(--${u.color}||var(--accent))">${u.initials||u.nama.charAt(0)}</div>
+      <div class="user-avatar" style="background:var(--${u.color}-bg, var(--accent-bg));color:var(--${u.color}, var(--accent))">${u.initials||u.nama.charAt(0)}</div>
       <div>
         <div style="font-weight:600;font-size:.9rem">${u.nama}</div>
         <div style="font-size:.75rem;color:var(--text2)">${u.storeId?storeName(u.storeId):'Akses Semua Toko'}</div>
@@ -1036,15 +1062,35 @@ function renderUserList(){
 function selectUser(id){
   selectedUserId=id;
   renderUserList();
-  document.getElementById('pin-input').focus();
+  // Bersihkan kolom PIN setiap kali ganti akun, supaya PIN akun sebelumnya
+  // (baik yang benar maupun salah) tidak tertinggal dan membingungkan.
+  const pinInput=document.getElementById('pin-input');
+  pinInput.value='';
+  pinInput.focus();
 }
 
 function doLogin(){
   if(!selectedUserId){toast('Pilih akun terlebih dahulu','error');return}
   const user=db.users.find(u=>u.id===selectedUserId);
-  const pin=document.getElementById('pin-input').value;
-  if(pin!==user.pin){toast('PIN salah!','error');return}
+  const pinInput=document.getElementById('pin-input');
+  if(!user){
+    // Akun yang dipilih sudah tidak ada (misalnya baru dihapus/disinkron ulang).
+    toast('Akun tidak ditemukan, silakan pilih ulang','error');
+    selectedUserId=null;
+    pinInput.value='';
+    renderUserList();
+    return;
+  }
+  const pin=pinInput.value.trim();
+  if(!pin){toast('Masukkan PIN terlebih dahulu','error');return}
+  if(pin!==String(user.pin).trim()){
+    toast('PIN salah!','error');
+    pinInput.value='';
+    pinInput.focus();
+    return;
+  }
   currentUser=user;
+  pinInput.value='';
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='block';
   initApp();
@@ -1060,6 +1106,9 @@ function logout(){
 
 // ============ APP INIT ============
 function refreshAllUI() {
+  // Selalu sinkronkan daftar akun di layar login, kalau-kalau data users
+  // berubah (mis. dari Firebase) sementara layar login masih terbuka.
+  if (typeof renderUserList === 'function') renderUserList();
   if (typeof renderCategoryTabs === 'function') renderCategoryTabs();
   if (typeof renderMenuGrid === 'function') renderMenuGrid();
   if (typeof renderMenuMgmt === 'function') renderMenuMgmt();
@@ -1068,7 +1117,7 @@ function refreshAllUI() {
   if (typeof renderStokTable === 'function') renderStokTable();
   if (typeof renderAbsensi === 'function') renderAbsensi();
   if (typeof renderLaporan === 'function') renderLaporan();
-  if (typeof updateFloatingChart === 'function' && document.getElementById('floating-chart')) updateFloatingChart();
+  if (typeof updateFloatingChart === 'function') updateFloatingChart();
   if (typeof renderDashboard === 'function' && document.getElementById('page-dashboard')?.classList.contains('active')) renderDashboard();
 }
 
@@ -1104,8 +1153,9 @@ function initApp(){
     storeRow.style.display='none';
   }
 
-  document.getElementById('floating-chart').style.display='block';
-  
+  // Floating chart popup tersembunyi secara default — hanya muncul otomatis
+  // setelah staff menyelesaikan sebuah transaksi (lihat showFloatingChartPopup()).
+
   renderCategoryTabs();
   renderMenuGrid();
   renderMenuMgmt();
@@ -1500,7 +1550,12 @@ function showStruk(tx){
 }
 
 
-function closeStruk(){document.getElementById('struk-modal').style.display='none'}
+function closeStruk(){
+  document.getElementById('struk-modal').style.display='none';
+  // Struk ditutup = staff sudah menyelesaikan & mencatat pesanan pelanggan ini.
+  // Baru di titik ini floating chart muncul, pop up dari tengah layar.
+  showFloatingChartPopup();
+}
 
 let bluetoothDevice=null;
 let btCharacteristic=null;
@@ -1861,7 +1916,7 @@ function renderMenuMgmt(){
         <div class="actions">
           <button class="btn btn-ghost btn-sm" onclick="openEditMenu(${base.id})">✏️ Edit toko ini</button>
           <button class="btn btn-sm" style="background:${m.avail?'var(--green-bg)':'var(--red-bg)'};color:${m.avail?'var(--green)':'var(--red)'};border:none" onclick="toggleMenuAvail(${base.id})">${m.avail?'✅ Aktif':'❌ Nonaktif'}</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteMenu(${base.id})">🗑️ Hapus\</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteMenu(${base.id})">🗑️ Hapus</button>
         </div>
       </div>
     </div>`;
@@ -1937,7 +1992,7 @@ function deleteMenu(id){
   const base=db.menus.find(x=>x.id===id);
   if(!base || menuManagementStoreId==null)return;
   const cfg=getMenuConfig(base,menuManagementStoreId);
-  if(!confirm(`Nonaktifkan menu \"${cfg.nama}\" hanya di ${storeName(menuManagementStoreId)}?`))return;
+  if(!confirm(`Nonaktifkan menu "${cfg.nama}" hanya di ${storeName(menuManagementStoreId)}?`))return;
   base.storeSettings[String(menuManagementStoreId)]={...cfg,avail:false,stok:0};
   saveDB();renderMenuMgmt();renderMenuGrid();renderCategoryTabs();
   toast(`Menu dinonaktifkan di ${storeName(menuManagementStoreId)}`,'info');
@@ -2133,31 +2188,45 @@ function goToStoreLaporan(storeId){
   showPage('laporan');
 }
 
-// ============ FLOATING CHART ============
+// ============ FLOATING CHART (POPUP DI TENGAH LAYAR) ============
+// Chart ini TERSEMBUNYI secara default. Ia hanya dimunculkan secara otomatis
+// oleh closeStruk() — yaitu saat staff sudah selesai memproses & mencatat
+// seluruh pesanan pelanggan (transaksi tersimpan + struk ditutup).
 function updateFloatingChart(){
   const today=new Date().toLocaleDateString('id-ID');
   let todayTxs=db.transactions.filter(t=>new Date(t.waktu).toLocaleDateString('id-ID')===today);
   if(currentUser&&currentUser.storeId!==null){todayTxs=todayTxs.filter(t=>t.storeId===currentUser.storeId)}
   const totalToday=todayTxs.reduce((s,t)=>s+t.total,0);
-  document.getElementById('chart-total-today').textContent=fmtRp(totalToday);
+  const totalEl=document.getElementById('chart-total-today');
+  if(totalEl) totalEl.textContent=fmtRp(totalToday);
   
   const hours={};
   for(let h=8;h<=20;h++)hours[h]=0;
   todayTxs.forEach(t=>{const h=new Date(t.waktu).getHours();if(hours[h]!==undefined)hours[h]+=t.total});
   const vals=Object.values(hours);
   const maxVal=Math.max(...vals,1);
-  document.getElementById('mini-chart').innerHTML=Object.entries(hours).map(([h,v])=>`
-    <div class="bar" style="height:${Math.max(4,(v/maxVal)*100)}%">
-      <span class="bar-label">${h}</span>
-      <span class="bar-val">${fmtRp(v)}</span>
-    </div>`).join('')+'<div class="chart-axis"></div>';
+  const miniChartEl=document.getElementById('mini-chart');
+  if(miniChartEl){
+    miniChartEl.innerHTML=Object.entries(hours).map(([h,v])=>`
+      <div class="bar" style="height:${Math.max(4,(v/maxVal)*100)}%">
+        <span class="bar-label">${h}</span>
+        <span class="bar-val">${fmtRp(v)}</span>
+      </div>`).join('')+'<div class="chart-axis"></div>';
+  }
 }
 
-let chartVisible=false;
-function toggleChart(){
-  chartVisible=!chartVisible;
-  document.getElementById('chart-popup').classList.toggle('show',chartVisible);
-  if(chartVisible)updateFloatingChart();
+let _chartAutoCloseTimer=null;
+function showFloatingChartPopup(){
+  updateFloatingChart();
+  const overlay=document.getElementById('floating-chart-overlay');
+  overlay.classList.add('show');
+  clearTimeout(_chartAutoCloseTimer);
+  _chartAutoCloseTimer=setTimeout(closeFloatingChartPopup,7000);
+}
+function closeFloatingChartPopup(){
+  const overlay=document.getElementById('floating-chart-overlay');
+  overlay.classList.remove('show');
+  clearTimeout(_chartAutoCloseTimer);
 }
 
 // ============ TOAST ============
@@ -2174,11 +2243,16 @@ function toast(msg,type='info'){
 function fmtRp(n){return new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(n)}
 
 // ============ INIT ============
-loadLocalDB();
-initFirebase();
-loadFromFirebase();
-renderUserList();
-document.getElementById('pin-input').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+// Setiap langkah dibungkus try/catch sendiri-sendiri: kalau salah satu gagal
+// (mis. Firebase diblokir CSP atau gagal konek), langkah-langkah lain —
+// terutama menampilkan daftar akun di layar login — tetap berjalan.
+try{ loadLocalDB(); }catch(e){ safeLog('warn','loadLocalDB gagal:',e); }
+try{ initFirebase(); }catch(e){ safeLog('warn','initFirebase gagal:',e); }
+try{ loadFromFirebase(); }catch(e){ safeLog('warn','loadFromFirebase gagal:',e); }
+try{ renderUserList(); }catch(e){ safeLog('warn','renderUserList gagal:',e); }
+try{
+  document.getElementById('pin-input').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+}catch(e){ safeLog('warn','Gagal memasang listener PIN:',e); }
 </script>
 </body>
 </html>
