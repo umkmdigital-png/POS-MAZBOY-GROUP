@@ -472,8 +472,9 @@ select option{background:var(--bg3)}
           </div>
           <div class="settings-section" style="margin-bottom:1rem">
             <h4>Integrasi</h4>
-            <div class="url-input-row"><input type="text" id="wa-number" placeholder="Nomor WhatsApp (628xxx...)"><button class="btn btn-ghost btn-sm">Simpan</button></div>
-            <div class="url-input-row"><input type="text" id="sheet-url" placeholder="Google Sheet webhook URL..."><button class="btn btn-ghost btn-sm">Simpan</button></div>
+            <div class="url-input-row"><input type="text" id="wa-number" placeholder="Nomor WhatsApp (628xxx...)"><button class="btn btn-ghost btn-sm" onclick="saveWaNumber()">Simpan</button></div>
+            <div class="url-input-row"><input type="text" id="sheet-url" placeholder="Google Sheet webhook URL (Apps Script Web App)..."><button class="btn btn-ghost btn-sm" onclick="saveSheetUrl()">Simpan</button></div>
+            <div id="sheet-last-sent" style="font-size:.75rem;color:var(--text2)"></div>
           </div>
           <div class="date-filter">
             <span style="font-size:.85rem;color:var(--text2)">Filter:</span>
@@ -482,6 +483,15 @@ select option{background:var(--bg3)}
             <input type="date" id="to-date">
             <button class="btn btn-ghost btn-sm" onclick="filterLaporan()">Tampilkan</button>
             <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇️ CSV</button>
+          </div>
+          <div class="settings-section owner-admin-only-block" style="display:none;border-color:var(--red)">
+            <h4 style="color:var(--red)">⚠️ Zona Darurat — Reset Data Penjualan</h4>
+            <div style="font-size:.8rem;color:var(--text2);margin-bottom:.85rem">Gunakan HANYA untuk kondisi darurat (salah input massal, testing, dll). Data transaksi yang dihapus <strong>tidak bisa dikembalikan</strong>.</div>
+            <div class="store-select-row" style="margin-bottom:0">
+              <select id="reset-store-select"></select>
+              <button class="btn btn-danger btn-sm" onclick="resetStoreData()">🗑️ Reset Data Toko Ini</button>
+              <button class="btn btn-danger btn-sm owner-only" style="display:none;background:#7a1414" onclick="resetAllStoreData()">🗑️ Reset SEMUA Toko</button>
+            </div>
           </div>
           <div class="stats-grid" id="laporan-stats"></div>
           <h4 style="margin-bottom:.75rem;font-size:.95rem">Riwayat Transaksi</h4>
@@ -500,6 +510,20 @@ select option{background:var(--bg3)}
             <table>
               <thead><tr><th>Menu</th><th>Kategori</th><th>Stok Sistem</th><th>Stok Fisik</th><th>Selisih</th><th>Ket.</th></tr></thead>
               <tbody id="stok-tbody"></tbody>
+            </table>
+          </div>
+
+          <div class="section-header" style="margin-top:2rem">
+            <div><h3>📥 Data Belanja Barang</h3><div style="font-size:.78rem;color:var(--text2);margin-top:.25rem">Catat barang apa saja yang dibelanjakan staff, per toko/akun, agar stok lebih terlacak detail.</div></div>
+            <button class="btn btn-primary btn-sm" onclick="openAddBelanja()">+ Catat Belanja</button>
+          </div>
+          <div class="stats-grid" style="margin-bottom:.85rem">
+            <div class="stat-card"><div class="stat-icon">🧾</div><div class="stat-label">Total Belanja (Toko Aktif)</div><div class="stat-value" style="color:var(--accent2)" id="belanja-total-display">Rp 0</div></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Tanggal</th><th>Toko</th><th>Staff</th><th>Barang</th><th>Qty</th><th>Harga Satuan</th><th>Total</th><th>Catatan</th></tr></thead>
+              <tbody id="belanja-tbody"></tbody>
             </table>
           </div>
         </div>
@@ -758,6 +782,29 @@ select option{background:var(--bg3)}
   </div>
 </div>
 
+<!-- BELANJA FORM MODAL -->
+<div class="modal-overlay" id="belanja-modal" style="display:none" onclick="if(event.target===this)document.getElementById('belanja-modal').style.display='none'">
+  <div class="modal">
+    <div class="modal-header"><h3>📥 Catat Belanja Barang <span id="belanja-modal-store" style="font-size:.75rem;color:var(--text2);font-weight:400"></span></h3><button class="close-btn" onclick="document.getElementById('belanja-modal').style.display='none'">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Pilih dari Menu (opsional)</label><select id="belanja-menu-select" onchange="onBelanjaMenuSelect()"><option value="">-- Barang lain / isi manual --</option></select></div>
+      <div class="form-group"><label>Nama Barang</label><input type="text" id="belanja-nama-input" placeholder="Nama barang yang dibelanjakan..."></div>
+      <div class="form-row">
+        <div class="form-group"><label>Jumlah</label><input type="number" id="belanja-qty-input" placeholder="0" min="1"></div>
+        <div class="form-group"><label>Harga Satuan (Rp)</label><input type="number" id="belanja-harga-input" placeholder="0"></div>
+      </div>
+      <div class="form-group"><label>Catatan</label><input type="text" id="belanja-catatan-input" placeholder="Opsional, mis. beli di Pasar Kalibaru..."></div>
+      <div class="form-group" id="belanja-addstock-group" style="display:none">
+        <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.85rem;color:var(--text)"><input type="checkbox" id="belanja-addstock-input" checked style="width:auto"> Tambahkan langsung ke stok menu ini</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('belanja-modal').style.display='none'">Batal</button>
+      <button class="btn btn-primary" onclick="saveBelanja()">Simpan</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOPPING FORM MODAL -->
 <div class="modal-overlay" id="topping-form-modal" style="display:none" onclick="if(event.target===this)document.getElementById('topping-form-modal').style.display='none'">
   <div class="modal">
@@ -806,8 +853,8 @@ let db={
   users:[
     {id:1,nama:'Walanduta',role:'owner',pin:'1234',color:'accent',initials:'OG',storeId:null},
     {id:9,nama:'Admin Pusat',role:'admin',pin:'0000',color:'pink',initials:'AD',storeId:null},
-    {id:2,nama:'Tegar',role:'staff',pin:'1111',color:'green',initials:'IQ',storeId:1},
-    {id:3,nama:'Iqbal',role:'staff',pin:'2222',color:'blue',initials:'TG',storeId:2},
+    {id:2,nama:'Tegar',role:'staff',pin:'1111',color:'green',initials:'TG',storeId:1},
+    {id:3,nama:'Iqbal',role:'staff',pin:'2222',color:'blue',initials:'IQ',storeId:2},
     {id:4,nama:'Misbah',role:'staff',pin:'3333',color:'amber',initials:'MB',storeId:3},
     {id:5,nama:'Cilor',role:'staff',pin:'4444',color:'amber',initials:'CR',storeId:4},
     {id:6,nama:'ES',role:'staff',pin:'5555',color:'amber',initials:'ES',storeId:5},
@@ -828,6 +875,34 @@ let db={
     {id:13,emoji:'🥞',nama:'Pancong Taro',kategori:'Camilan',harga:10000,stok:40,avail:true},
     {id:14,emoji:'🥞',nama:'Pancong Durian',kategori:'Camilan',harga:10000,stok:40,avail:true},
     {id:15,emoji:'🥞',nama:'Pancong Strawberry',kategori:'Camilan',harga:10000,stok:40,avail:true},
+    {id: 16, emoji: '☕', nama: 'Americano Single', kategori: 'Minuman', harga: 6000, stok: 40, avail: true},
+  {id: 17, emoji: '☕', nama: 'Americano Double', kategori: 'Minuman', harga: 8000, stok: 40, avail: true},
+  {id: 18, emoji: '☕', nama: 'Coffee Milk', kategori: 'Minuman', harga: 7000, stok: 40, avail: true},
+  {id: 19, emoji: '☕', nama: 'Coffee Aren', kategori: 'Minuman', harga: 8000, stok: 40, avail: true},
+  {id: 20, emoji: '☕', nama: 'Coffee Milo', kategori: 'Minuman', harga: 10000, stok: 40, avail: true},
+  {id: 21, emoji: '🍯', nama: 'Coffee Honey', kategori: 'Minuman', harga: 11000, stok: 40, avail: true},
+  {id: 22, emoji: '☕', nama: 'Coffee Latte', kategori: 'Minuman', harga: 10000, stok: 40, avail: true},
+  {id: 23, emoji: '✨', nama: 'Rimba Signature', kategori: 'Minuman', harga: 11000, stok: 40, avail: true},
+  {id: 24, emoji: '☕', nama: 'Salted Caramel', kategori: 'Minuman', harga: 12000, stok: 40, avail: true},
+  {id: 25, emoji: '☕', nama: 'Vanilla Latte', kategori: 'Minuman', harga: 12000, stok: 40, avail: true},
+  {id: 26, emoji: '☕', nama: 'Hazelnut Latte', kategori: 'Minuman', harga: 12000, stok: 40, avail: true},
+  {id: 27, emoji: '☕', nama: 'Moccacino', kategori: 'Minuman', harga: 13000, stok: 40, avail: true},
+  {id: 28, emoji: '☕', nama: 'Cappucinno', kategori: 'Minuman', harga: 13000, stok: 40, avail: true},
+  {id: 29, emoji: '☕', nama: 'Machiato', kategori: 'Minuman', harga: 13000, stok: 40, avail: true},
+  {id: 30, emoji: '🥛', nama: 'Fresh Milk', kategori: 'Minuman', harga: 8000, stok: 40, avail: true},
+  {id: 31, emoji: '🍫', nama: 'Chocolate', kategori: 'Minuman', harga: 8000, stok: 40, avail: true},
+  {id: 32, emoji: '🍓', nama: 'Strawberry', kategori: 'Minuman', harga: 8000, stok: 40, avail: true},
+  {id: 33, emoji: '🥭', nama: 'Manggo', kategori: 'Minuman', harga: 8000, stok: 40, avail: true},
+  {id: 34, emoji: '🥤', nama: 'Thaitea', kategori: 'Minuman', harga: 8000, stok: 40, avail: true},
+  {id: 35, emoji: '🍠', nama: 'Taro', kategori: 'Minuman', harga: 8000, stok: 40, avail: true},
+  {id: 36, emoji: '🍵', nama: 'Matcha', kategori: 'Minuman', harga: 9000, stok: 40, avail: true},
+  {id: 37, emoji: '🥤', nama: 'Milo', kategori: 'Minuman', harga: 9000, stok: 40, avail: true},
+  {id: 38, emoji: '🥑', nama: 'Avocado', kategori: 'Minuman', harga: 9000, stok: 40, avail: true},
+  {id: 39, emoji: '🥛', nama: 'Milky Caramel', kategori: 'Minuman', harga: 10000, stok: 40, avail: true},
+  {id: 40, emoji: '🥛', nama: 'Milky Hazelnut', kategori: 'Minuman', harga: 10000, stok: 40, avail: true},
+  {id: 41, emoji: '🍯', nama: 'Milky Honey', kategori: 'Minuman', harga: 10000, stok: 40, avail: true},
+  {id: 42, emoji: '🆓', nama: 'Gratis', kategori: 'Lainnya', harga: 0, stok: 40, avail: true},
+  {id: 43, emoji: '🍰', nama: 'Kue', kategori: 'Camilan', harga: 2000, stok: 40, avail: true}
   ],
   toppings:[
     {id:1,nama:'Almond',harga:4000,avail:true},
@@ -841,6 +916,7 @@ let db={
   ],
   transactions:[],
   absensi:[],
+  belanja:[],
   nextTxId:1
 };
 
@@ -866,9 +942,9 @@ let database=null,firebaseReady=false;
 function safeLog(level,...args){try{if(typeof console!=='undefined'&&typeof console[level]==='function'){console[level](...args)}else if(typeof console!=='undefined'&&typeof console.log==='function'){console.log(...args)}}catch(e){}}
 function isFirebaseConfigured(){return!!window.firebase&&firebaseConfig.apiKey&&!firebaseConfig.apiKey.includes('API_KEY_ANDA')&&firebaseConfig.projectId&&!firebaseConfig.projectId.includes('PROYEK_ANDA')&&firebaseConfig.databaseURL&&!firebaseConfig.databaseURL.includes('PROYEK_ANDA')}
 function initFirebase(){if(!isFirebaseConfigured()){safeLog('log','Firebase belum dikonfigurasi.');return false}try{if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);database=firebase.database();firebaseReady=true;return true}catch(error){safeLog('warn','Firebase error:',error);database=null;firebaseReady=false;return false}}
-function loadLocalDB(){try{const raw=localStorage.getItem('KASIR_MAZBOY_DB');if(!raw)return false;const saved=JSON.parse(raw);db={...db,...saved,settings:{...db.settings,...(saved.settings||{})},stores:Array.isArray(saved.stores)?saved.stores:db.stores,users:Array.isArray(saved.users)?saved.users:db.users,menus:Array.isArray(saved.menus)?saved.menus:db.menus,toppings:Array.isArray(saved.toppings)?saved.toppings:db.toppings,transactions:Array.isArray(saved.transactions)?saved.transactions:db.transactions,absensi:Array.isArray(saved.absensi)?saved.absensi:db.absensi,nextTxId:Number(saved.nextTxId)||db.nextTxId};normalizeAllMenuStores();return true}catch(error){safeLog('warn','loadLocalDB gagal:',error);return false}}
+function loadLocalDB(){try{const raw=localStorage.getItem('KASIR_MAZBOY_DB');if(!raw)return false;const saved=JSON.parse(raw);db={...db,...saved,settings:{...db.settings,...(saved.settings||{})},stores:Array.isArray(saved.stores)?saved.stores:db.stores,users:Array.isArray(saved.users)?saved.users:db.users,menus:Array.isArray(saved.menus)?saved.menus:db.menus,toppings:Array.isArray(saved.toppings)?saved.toppings:db.toppings,transactions:Array.isArray(saved.transactions)?saved.transactions:db.transactions,absensi:Array.isArray(saved.absensi)?saved.absensi:db.absensi,belanja:Array.isArray(saved.belanja)?saved.belanja:db.belanja,nextTxId:Number(saved.nextTxId)||db.nextTxId};normalizeAllMenuStores();return true}catch(error){safeLog('warn','loadLocalDB gagal:',error);return false}}
 function saveDB(){try{localStorage.setItem('KASIR_MAZBOY_DB',JSON.stringify(db))}catch(error){safeLog('warn','localStorage error:',error)}if(firebaseReady&&database){database.ref('kasirpro_db').set(db).catch(error=>safeLog('error','Firebase sync error:',error))}}
-function loadFromFirebase(){if(!firebaseReady||!database)return;database.ref('kasirpro_db').on('value',snapshot=>{const data=snapshot.val();if(!data)return;if(Array.isArray(data.menus))db.menus=data.menus;normalizeAllMenuStores();if(Array.isArray(data.users))db.users=data.users;if(Array.isArray(data.toppings))db.toppings=data.toppings;if(Array.isArray(data.stores))db.stores=data.stores;if(data.settings&&typeof data.settings==='object')db.settings={...db.settings,...data.settings};if(Array.isArray(data.transactions))db.transactions=data.transactions;if(Array.isArray(data.absensi))db.absensi=data.absensi;if(Number.isInteger(data.nextTxId))db.nextTxId=data.nextTxId;localStorage.setItem('KASIR_MAZBOY_DB',JSON.stringify(db));refreshAllUI()},error=>{safeLog('warn','Firebase listener error:',error)})}
+function loadFromFirebase(){if(!firebaseReady||!database)return;database.ref('kasirpro_db').on('value',snapshot=>{const data=snapshot.val();if(!data)return;if(Array.isArray(data.menus))db.menus=data.menus;normalizeAllMenuStores();if(Array.isArray(data.users))db.users=data.users;if(Array.isArray(data.toppings))db.toppings=data.toppings;if(Array.isArray(data.stores))db.stores=data.stores;if(data.settings&&typeof data.settings==='object')db.settings={...db.settings,...data.settings};if(Array.isArray(data.transactions))db.transactions=data.transactions;if(Array.isArray(data.absensi))db.absensi=data.absensi;if(Array.isArray(data.belanja))db.belanja=data.belanja;if(Number.isInteger(data.nextTxId))db.nextTxId=data.nextTxId;localStorage.setItem('KASIR_MAZBOY_DB',JSON.stringify(db));refreshAllUI()},error=>{safeLog('warn','Firebase listener error:',error)})}
 
 // ============ AUTH ============
 let currentUser=null,selectedUserId=null;
@@ -908,6 +984,7 @@ function refreshAllUI(){
   if(typeof renderToppingTable==='function')renderToppingTable();
   if(typeof renderAkunTable==='function')renderAkunTable();
   if(typeof renderStokTable==='function')renderStokTable();
+  if(typeof renderBelanjaTable==='function')renderBelanjaTable();
   if(typeof renderAbsensi==='function')renderAbsensi();
   if(typeof renderLaporan==='function')renderLaporan();
   if(typeof updateFloatingChart==='function')updateFloatingChart();
@@ -927,6 +1004,7 @@ function initApp(){
   const isMulti=currentUser.role==='owner'||currentUser.role==='admin';
   document.querySelectorAll('.owner-only').forEach(el=>{el.style.display=currentUser.role==='owner'?'flex':'none'});
   document.querySelectorAll('.owner-admin-only').forEach(el=>{el.style.display=isMulti?'flex':'none'});
+  document.querySelectorAll('.owner-admin-only-block').forEach(el=>{el.style.display=isMulti?'block':'none'});
   document.getElementById('nav-owner-section').style.display=isMulti?'block':'none';
   document.getElementById('nav-dashboard-section').style.display=isMulti?'block':'none';
   currentStoreId=currentUser.storeId;
@@ -943,7 +1021,8 @@ function initApp(){
   document.getElementById('cart-fab').style.display='block';
 
   renderCategoryTabs();renderMenuGrid();renderMenuMgmt();renderToppingTable();renderAkunTable();
-  renderStokTable();renderAbsensi();renderLaporan();loadSettings();initCalc();updateClock();updateFloatingChart();
+  renderStokTable();renderBelanjaTable();renderAbsensi();renderLaporan();loadSettings();initCalc();updateClock();updateFloatingChart();
+  populateResetStoreSelect();
   if(isMulti){renderDashboard();showPage('dashboard')}
   setInterval(updateClock,1000);
   setInterval(updateFloatingChart,30000);
@@ -967,7 +1046,7 @@ function showPage(name){
   const titles={dashboard:'🏬 Dashboard Multi-Toko',kasir:'🛒 Kasir',laporan:'📊 Laporan',stok:'📦 Stok Opname',absensi:'🕐 Absensi',kalkulator:'🧮 Kalkulator',menu:'🍽️ Kelola Menu',topping:'🫙 Kelola Topping',akun:'👥 Kelola Akun',pengaturan:'⚙️ Pengaturan'};
   document.getElementById('page-title').textContent=titles[name]||name;
   if(name==='laporan')renderLaporan();
-  if(name==='stok')renderStokTable();
+  if(name==='stok'){renderStokTable();renderBelanjaTable()}
   if(name==='dashboard')renderDashboard();
   closeSidebar();
 }
@@ -1007,7 +1086,7 @@ function updateFab(){
 // ============ KASIR MENU ============
 let activeCategory='Semua',cart=[],selectedMenuForCart=null,selectedToppings=[],paymentMethod='tunai',currentStoreId=null,dashboardStoreFilter=null;
 
-function onKasirStoreChange(){currentStoreId=parseInt(document.getElementById('kasir-store-select').value);renderCategoryTabs();renderMenuGrid();renderMenuMgmt();renderStokTable();toast(`🏪 Kasir aktif: ${storeName(currentStoreId)}`,'info')}
+function onKasirStoreChange(){currentStoreId=parseInt(document.getElementById('kasir-store-select').value);renderCategoryTabs();renderMenuGrid();renderMenuMgmt();renderStokTable();renderBelanjaTable();toast(`🏪 Kasir aktif: ${storeName(currentStoreId)}`,'info')}
 function renderCategoryTabs(){normalizeAllMenuStores();const cats=['Semua',...new Set(db.menus.map(m=>getMenuForStore(m,currentStoreId).kategori))];document.getElementById('category-tabs').innerHTML=cats.map(c=>`<div class="cat-tab ${c===activeCategory?'active':''}" onclick="setCategory('${c}')">${c}</div>`).join('')}
 function setCategory(cat){activeCategory=cat;renderCategoryTabs();renderMenuGrid()}
 function filterMenu(){renderMenuGrid()}
@@ -1203,8 +1282,9 @@ function renderLaporan(){
 }
 function filterLaporan(){dashboardStoreFilter=null;renderLaporan()}
 function sendWA(){
-  const num=document.getElementById('wa-number').value;
+  const num=document.getElementById('wa-number').value.trim();
   if(!num){toast('Masukkan nomor WhatsApp','error');return}
+  db.settings.waNumber=num;saveDB();
   const today=new Date().toLocaleDateString('id-ID');
   const todayTxs=db.transactions.filter(t=>new Date(t.waktu).toLocaleDateString('id-ID')===today);
   if(!todayTxs.length){toast('Belum ada transaksi hari ini','info');return}
@@ -1217,8 +1297,93 @@ function sendWA(){
   msg+=`\n_Dikirim dari Kasir Pro 🧾_`;
   window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`,'_blank');
 }
-async function sendSheet(){const url=document.getElementById('sheet-url').value;if(!url){toast('Masukkan Google Sheet webhook URL','error');return}const today=new Date().toLocaleDateString('id-ID');const data={toko:db.settings.nama,tanggal:today,transaksi:db.transactions.filter(t=>new Date(t.waktu).toLocaleDateString('id-ID')===today).map(t=>({no:t.no,waktu:t.waktu,customer:t.customer,total:t.total,metode:t.metode}))};try{await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data),mode:'no-cors'});toast('✅ Data terkirim ke Google Sheet!','success')}catch(e){toast('Gagal kirim: cek URL','error')}}
+function saveWaNumber(){const v=document.getElementById('wa-number').value.trim();db.settings.waNumber=v;saveDB();toast(v?'✅ Nomor WhatsApp disimpan':'Nomor WhatsApp dikosongkan','success')}
+function saveSheetUrl(){const v=document.getElementById('sheet-url').value.trim();db.settings.sheetUrl=v;saveDB();toast(v?'✅ URL Google Sheet disimpan':'URL Google Sheet dikosongkan','success')}
+async function sendSheet(){
+  const urlInput=document.getElementById('sheet-url');
+  const url=urlInput.value.trim();
+  if(!url){toast('Masukkan Google Sheet webhook URL lalu klik Simpan','error');return}
+  // Selalu simpan URL terbaru saat mengirim, biar tidak hilang
+  db.settings.sheetUrl=url;saveDB();
+
+  // Kirim data sesuai rentang tanggal & filter toko yang sedang tampil di Laporan
+  const from=document.getElementById('from-date')?.value;
+  const to=document.getElementById('to-date')?.value;
+  let txs=db.transactions;
+  if(currentUser&&currentUser.storeId!==null)txs=txs.filter(t=>t.storeId===currentUser.storeId);
+  else if(dashboardStoreFilter)txs=txs.filter(t=>t.storeId===dashboardStoreFilter);
+  if(from){const fd=new Date(from);txs=txs.filter(t=>new Date(t.waktu)>=fd)}
+  if(to){const td=new Date(to);td.setHours(23,59,59);txs=txs.filter(t=>new Date(t.waktu)<=td)}
+  if(!txs.length){toast('Tidak ada transaksi pada rentang tanggal/toko yang sedang ditampilkan','info');return}
+
+  const payload={
+    toko:db.settings.nama,
+    dikirimPada:new Date().toISOString(),
+    rentang:{dari:from||null,sampai:to||null},
+    jumlahTransaksi:txs.length,
+    totalPenjualan:txs.reduce((s,t)=>s+t.total,0),
+    transaksi:txs.map(t=>({
+      no:t.no,
+      waktu:t.waktu,
+      toko:storeName(t.storeId),
+      kasir:t.kasir,
+      customer:t.customer,
+      items:t.items.map(i=>`${i.nama}${i.toppings.length?' ('+i.toppings.map(x=>x.nama).join(', ')+')':''} x${i.qty}`).join('; '),
+      subtotal:t.subtotal,
+      diskon:t.discAmt,
+      total:t.total,
+      metode:t.metode
+    }))
+  };
+
+  try{
+    // PENTING: gunakan text/plain, BUKAN application/json.
+    // Karena mode 'no-cors' tidak boleh mengirim header non-standar (application/json memicu
+    // preflight OPTIONS yang tidak didukung Google Apps Script Web App, sehingga request gagal
+    // tanpa error yang jelas di browser). text/plain tetap bisa di-JSON.parse() di sisi Apps Script
+    // lewat e.postData.contents, jadi data tetap terkirim sebagai JSON yang valid.
+    await fetch(url,{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(payload)
+    });
+    const now=new Date().toLocaleTimeString('id-ID');
+    const info=document.getElementById('sheet-last-sent');
+    if(info)info.textContent=`Terakhir dikirim: ${now} (${txs.length} transaksi). Karena mode no-cors, browser tidak bisa memastikan sukses — cek langsung di Google Sheet.`;
+    toast(`📋 ${txs.length} transaksi dikirim ke Google Sheet!`,'success');
+  }catch(e){
+    toast('❌ Gagal kirim ke Google Sheet: '+e.message,'error');
+  }
+}
 function exportCSV(){const rows=[['No','Waktu','Pelanggan','Items','Subtotal','Diskon','Total','Metode','Kasir']];db.transactions.forEach(t=>{rows.push([t.no,t.waktu,t.customer,t.items.map(i=>`${i.nama}x${i.qty}`).join(';'),t.subtotal,t.discAmt,t.total,t.metode,t.kasir])});const csv=rows.map(r=>r.join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='laporan-kasir.csv';a.click()}
+
+// ============ RESET DATA PENJUALAN (DARURAT) ============
+function populateResetStoreSelect(){const sel=document.getElementById('reset-store-select');if(!sel)return;sel.innerHTML=db.stores.map(s=>`<option value="${s.id}">${s.nama}</option>`).join('')}
+function resetStoreData(){
+  if(currentUser?.role!=='owner'&&currentUser?.role!=='admin'){toast('Akses ditolak','error');return}
+  const sel=document.getElementById('reset-store-select');
+  const storeId=parseInt(sel.value);
+  const store=db.stores.find(s=>s.id===storeId);
+  if(!store)return;
+  if(!confirm(`⚠️ Yakin ingin menghapus SEMUA data transaksi toko "${store.nama}"?\n\nTindakan ini hanya untuk kondisi darurat dan TIDAK BISA dibatalkan!`))return;
+  const typed=prompt(`Untuk konfirmasi, ketik nama toko persis:\n"${store.nama}"`);
+  if(typed!==store.nama){toast('Konfirmasi tidak sesuai, reset dibatalkan','error');return}
+  const jumlah=db.transactions.filter(t=>t.storeId===storeId).length;
+  db.transactions=db.transactions.filter(t=>t.storeId!==storeId);
+  saveDB();renderLaporan();renderDashboard();
+  toast(`🗑️ ${jumlah} data transaksi "${store.nama}" berhasil direset`,'success');
+}
+function resetAllStoreData(){
+  if(currentUser?.role!=='owner'){toast('Hanya Owner yang dapat mereset semua toko','error');return}
+  if(!confirm('⚠️⚠️ Yakin ingin menghapus SEMUA data transaksi dari SEMUA TOKO?\n\nTindakan ini hanya untuk kondisi darurat dan TIDAK BISA dibatalkan!'))return;
+  const typed=prompt('Untuk konfirmasi, ketik: HAPUS SEMUA');
+  if(typed!=='HAPUS SEMUA'){toast('Konfirmasi tidak sesuai, reset dibatalkan','error');return}
+  const jumlah=db.transactions.length;
+  db.transactions=[];
+  saveDB();renderLaporan();renderDashboard();
+  toast(`🗑️ ${jumlah} data transaksi dari semua toko berhasil direset`,'success');
+}
 
 // ============ STOK OPNAME ============
 function renderStokTable(){
@@ -1227,6 +1392,65 @@ function renderStokTable(){
 }
 function calcDiff(id,sistem){const fisik=parseInt(document.getElementById('stok-'+id).value)||0;const diff=fisik-sistem;const el=document.getElementById('diff-'+id);el.textContent=(diff>=0?'+':'')+diff;el.className='stok-diff '+(diff>0?'plus':diff<0?'minus':'zero')}
 function saveStok(){normalizeAllMenuStores();db.menus.forEach(base=>{const el=document.getElementById('stok-'+base.id);if(el){const cfg=getMenuConfig(base,currentStoreId);base.storeSettings[String(currentStoreId)]={...cfg,stok:Math.max(0,parseInt(el.value)||0)}}});saveDB();renderMenuGrid();renderStokTable();renderMenuMgmt();toast(`✅ Stok ${storeName(currentStoreId)} berhasil disimpan!`,'success')}
+
+// ============ DATA BELANJA (PEMBELIAN BARANG) ============
+function openAddBelanja(){
+  normalizeAllMenuStores();
+  const sel=document.getElementById('belanja-menu-select');
+  sel.innerHTML='<option value="">-- Barang lain / isi manual --</option>'+db.menus.map(base=>{const cfg=getMenuConfig(base,currentStoreId);return`<option value="${base.id}">${cfg.emoji} ${cfg.nama}</option>`}).join('');
+  sel.value='';
+  document.getElementById('belanja-nama-input').value='';
+  document.getElementById('belanja-qty-input').value='';
+  document.getElementById('belanja-harga-input').value='';
+  document.getElementById('belanja-catatan-input').value='';
+  document.getElementById('belanja-addstock-group').style.display='none';
+  document.getElementById('belanja-addstock-input').checked=true;
+  document.getElementById('belanja-modal-store').textContent=storeName(currentStoreId);
+  document.getElementById('belanja-modal').style.display='flex';
+}
+function onBelanjaMenuSelect(){
+  const id=document.getElementById('belanja-menu-select').value;
+  const group=document.getElementById('belanja-addstock-group');
+  if(id){
+    const base=db.menus.find(m=>m.id===parseInt(id));
+    const cfg=getMenuConfig(base,currentStoreId);
+    document.getElementById('belanja-nama-input').value=cfg.nama;
+    group.style.display='block';
+  }else{
+    group.style.display='none';
+  }
+}
+function saveBelanja(){
+  if(currentStoreId==null){toast('Pilih toko terlebih dahulu','error');return}
+  const menuId=document.getElementById('belanja-menu-select').value;
+  const nama=document.getElementById('belanja-nama-input').value.trim();
+  const qty=parseInt(document.getElementById('belanja-qty-input').value)||0;
+  const harga=parseInt(document.getElementById('belanja-harga-input').value)||0;
+  const catatan=document.getElementById('belanja-catatan-input').value.trim();
+  if(!nama||qty<=0){toast('Nama barang dan jumlah wajib diisi','error');return}
+  const rec={id:Date.now(),storeId:currentStoreId,waktu:new Date().toISOString(),staff:currentUser.nama,nama,qty,harga,total:qty*harga,catatan,menuId:menuId?parseInt(menuId):null};
+  db.belanja.push(rec);
+  if(menuId&&document.getElementById('belanja-addstock-input').checked){
+    const base=db.menus.find(m=>m.id===parseInt(menuId));
+    if(base){normalizeMenuStoreSettings(base);const cfg=getMenuConfig(base,currentStoreId);base.storeSettings[String(currentStoreId)]={...cfg,stok:cfg.stok+qty}}
+  }
+  saveDB();
+  document.getElementById('belanja-modal').style.display='none';
+  renderBelanjaTable();renderStokTable();renderMenuGrid();renderMenuMgmt();
+  toast('✅ Data belanja berhasil dicatat!','success');
+}
+function renderBelanjaTable(){
+  const tbody=document.getElementById('belanja-tbody');
+  if(!tbody)return;
+  let list=db.belanja;
+  if(currentUser&&currentUser.storeId!==null)list=list.filter(b=>b.storeId===currentUser.storeId);
+  else if(currentStoreId!=null)list=list.filter(b=>b.storeId===currentStoreId);
+  const totalBelanja=list.reduce((s,b)=>s+b.total,0);
+  const totalEl=document.getElementById('belanja-total-display');
+  if(totalEl)totalEl.textContent=fmtRp(totalBelanja);
+  tbody.innerHTML=list.length?[...list].reverse().map(b=>{const d=new Date(b.waktu);return`<tr><td>${d.toLocaleDateString('id-ID')} ${d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</td><td><span class="badge badge-info">${storeName(b.storeId)}</span></td><td>${b.staff}</td><td>${b.nama}</td><td>${b.qty}</td><td>${fmtRp(b.harga)}</td><td style="font-weight:700;color:var(--accent2)">${fmtRp(b.total)}</td><td style="font-size:.8rem;color:var(--text2)">${b.catatan||'—'}</td></tr>`}).join(''):'<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:1.5rem">Belum ada data belanja</td></tr>';
+}
+function deleteBelanja(id){if(!confirm('Hapus catatan belanja ini?'))return;db.belanja=db.belanja.filter(b=>b.id!==id);saveDB();renderBelanjaTable()}
 
 // ============ ABSENSI ============
 function renderAbsensi(){
@@ -1281,7 +1505,14 @@ function saveUser(){const nama=document.getElementById('user-nama-input').value;
 function deleteUser(id){if(!confirm('Hapus akun ini?'))return;db.users=db.users.filter(u=>u.id!==id);saveDB();renderAkunTable();renderUserList()}
 
 // ============ SETTINGS ============
-function loadSettings(){document.getElementById('toko-nama').value=db.settings.nama||'';document.getElementById('toko-alamat').value=db.settings.alamat||'';document.getElementById('toko-telp').value=db.settings.telp||'';document.getElementById('toko-footer').value=db.settings.footer||''}
+function loadSettings(){
+  document.getElementById('toko-nama').value=db.settings.nama||'';
+  document.getElementById('toko-alamat').value=db.settings.alamat||'';
+  document.getElementById('toko-telp').value=db.settings.telp||'';
+  document.getElementById('toko-footer').value=db.settings.footer||'';
+  const waEl=document.getElementById('wa-number');if(waEl)waEl.value=db.settings.waNumber||'';
+  const sheetEl=document.getElementById('sheet-url');if(sheetEl)sheetEl.value=db.settings.sheetUrl||'';
+}
 function saveTokoSettings(){db.settings.nama=document.getElementById('toko-nama').value;db.settings.alamat=document.getElementById('toko-alamat').value;db.settings.telp=document.getElementById('toko-telp').value;db.settings.footer=document.getElementById('toko-footer').value;saveDB();toast('✅ Pengaturan disimpan!','success')}
 
 // ============ DASHBOARD ============
